@@ -1,0 +1,8 @@
+bin/
+dist/
+nbproject/
+.cproject
+.project
+.settings/
+*.class
+*.log
