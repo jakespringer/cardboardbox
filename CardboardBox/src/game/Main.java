@@ -64,13 +64,17 @@ public class Main {
         });
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
+        
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
         while (!glfwWindowShouldClose(renderer.window)) {
             // Poll for window events. The key callback above will only be
             // invoked during this call.
             glfwPollEvents();
+            
+            if (Input.isPressed("exit")) {
+            	glfwSetWindowShouldClose(renderer.window, true);
+            }
 
             // Clear the color buffer
             glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -84,7 +88,7 @@ public class Main {
             // Swap screen buffers
             glfwSwapBuffers(renderer.window); // swap the color buffers
 
-            renderer.draw();
+            renderer.draw();            
         }
 
         VAO.destroy();

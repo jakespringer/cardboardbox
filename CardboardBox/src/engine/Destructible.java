@@ -8,10 +8,10 @@ import java.util.Stack;
 
 public abstract class Destructible {
 
-    private static final Stack<Destructible> STACK = new Stack();
+    private static final Stack<Destructible> STACK = new Stack<>();
 
     private Destructible parent;
-    private final Set<Destructible> children = new HashSet();
+    private final Set<Destructible> children = new HashSet<>();
 
     public Destructible() {
         if (!STACK.isEmpty()) {

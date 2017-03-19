@@ -77,6 +77,5 @@ public class Chunk {
                 + "}";
 
         shaderProgram = new ShaderProgram(vertexShaderSource, fragmentShaderSource);
-
     }
 }
