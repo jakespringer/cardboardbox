@@ -5,7 +5,7 @@ public final class VectorKey {
 	final int b;
 	final int c;
 
-	VectorKey(int a, int b, int c) {
+	public VectorKey(int a, int b, int c) {
 		this.a = a;
 		this.b = b;
 		this.c = c;

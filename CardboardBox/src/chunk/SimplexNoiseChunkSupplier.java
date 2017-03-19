@@ -5,6 +5,7 @@ import java.util.HashMap;
 import org.joml.Vector3ic;
 
 import util.Noise;
+import util.VectorKey;
 
 public class SimplexNoiseChunkSupplier implements ChunkSupplier {
 	private Noise noise;
@@ -20,6 +21,8 @@ public class SimplexNoiseChunkSupplier implements ChunkSupplier {
 
 	@Override
 	public Chunk get(int x, int y, int z) {
+		cache.containsKey(new VectorKey(x, y, z));
+		
 		Chunk chunk = new Chunk();
 		
 		for (int i=0; i<Chunk.SIDE_LENGTH; ++i) {
