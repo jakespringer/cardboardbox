@@ -15,18 +15,14 @@ import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 
 public class Main {
 
-    public static Renderer r;
+    public static Renderer renderer;
 
     public static void main(String[] args) {
         System.setProperty("org.lwjgl.librarypath", new File("native").getAbsolutePath());
-
-        r = new Renderer();
-
-        r.initialize();
-
+        renderer = new Renderer();
+        renderer.initialize();
         loop();
-
-        r.cleanup();
+        renderer.cleanup();
     }
 
     private static void loop() {
@@ -71,7 +67,7 @@ public class Main {
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
-        while (!glfwWindowShouldClose(r.window)) {
+        while (!glfwWindowShouldClose(renderer.window)) {
             // Poll for window events. The key callback above will only be
             // invoked during this call.
             glfwPollEvents();
@@ -86,9 +82,9 @@ public class Main {
             });
 
             // Swap screen buffers
-            glfwSwapBuffers(r.window); // swap the color buffers
+            glfwSwapBuffers(renderer.window); // swap the color buffers
 
-            r.draw();
+            renderer.draw();
         }
 
         VAO.destroy();
