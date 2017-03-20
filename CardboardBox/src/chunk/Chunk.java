@@ -41,9 +41,27 @@ public class Chunk {
         colors[x * SIDE_LENGTH * SIDE_LENGTH + y * SIDE_LENGTH + z] = 0;
     }
 
+    private static ShaderProgram shaderProgram;
     private VertexArrayObject VAO;
 
     public void load() {
+        if (shaderProgram == null) {
+
+            String vertexShaderSource = "#version 330 core\n"
+                    + "layout (location = 0) in vec3 position;\n"
+                    + "void main()\n"
+                    + "{\n"
+                    + "    gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
+                    + "}";
+            String fragmentShaderSource = "#version 330 core\n"
+                    + "out vec4 color;\n"
+                    + "void main()\n"
+                    + "{\n"
+                    + "    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+                    + "}";
+
+            shaderProgram = new ShaderProgram(vertexShaderSource, fragmentShaderSource);
+        }
 
         List<Vector3i> verts = new ArrayList();
         for (int x = 0; x < SIDE_LENGTH; x++) {
@@ -111,24 +129,5 @@ public class Chunk {
         with(Arrays.asList(shaderProgram, VAO), () -> {
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         });
-    }
-
-    static ShaderProgram shaderProgram;
-
-    static {
-        String vertexShaderSource = "#version 330 core\n"
-                + "layout (location = 0) in vec3 position;\n"
-                + "void main()\n"
-                + "{\n"
-                + "    gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
-                + "}";
-        String fragmentShaderSource = "#version 330 core\n"
-                + "out vec4 color;\n"
-                + "void main()\n"
-                + "{\n"
-                + "    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-                + "}";
-
-        shaderProgram = new ShaderProgram(vertexShaderSource, fragmentShaderSource);
     }
 }
