@@ -54,7 +54,7 @@ public class Chunk {
         VAO.deactivate();
     }
 
-    public void draw() {
+    public void draw(int chunkX, int chunkY, int chunkZ) {
         with(Arrays.asList(shaderProgram, VAO), () -> {
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         });
