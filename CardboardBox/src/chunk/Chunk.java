@@ -4,7 +4,9 @@ import static engine.Activatable.with;
 import engine.BufferObject;
 import engine.ShaderProgram;
 import engine.VertexArrayObject;
-import java.util.Arrays;
+import java.util.*;
+import java.util.stream.IntStream;
+import org.joml.Vector3i;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
@@ -21,6 +23,9 @@ public class Chunk {
     }
 
     private boolean getExists(int x, int y, int z) {
+        if (x < 0 || y < 0 || z < 0 || x >= SIDE_LENGTH || y >= SIDE_LENGTH || z >= SIDE_LENGTH) {
+            return false;
+        }
         return colors[x * SIDE_LENGTH * SIDE_LENGTH + y * SIDE_LENGTH + z] != 0;
     }
 
@@ -39,8 +44,57 @@ public class Chunk {
     private VertexArrayObject VAO;
 
     public void load() {
-        float[] vertices = {};
-        int[] indices = {};
+
+        List<Vector3i> verts = new ArrayList();
+        for (int x = 0; x < SIDE_LENGTH; x++) {
+            for (int y = 0; y < SIDE_LENGTH; y++) {
+                for (int z = 0; z < SIDE_LENGTH; z++) {
+                    if (getExists(x, y, z)) {
+                        if (!getExists(x - 1, y, z)) {
+                            for (int c = 0; c < 4; c++) {
+                                verts.add(new Vector3i(x, y + c % 2, z + c / 2));
+                            }
+                        }
+                        if (!getExists(x + 1, y, z)) {
+                            for (int c = 0; c < 4; c++) {
+                                verts.add(new Vector3i(x + 1, y + c % 2, z + c / 2));
+                            }
+                        }
+                        if (!getExists(x, y - 1, z)) {
+                            for (int c = 0; c < 4; c++) {
+                                verts.add(new Vector3i(x + c % 2, y, z + c / 2));
+                            }
+                        }
+                        if (!getExists(x, y + 1, z)) {
+                            for (int c = 0; c < 4; c++) {
+                                verts.add(new Vector3i(x + c % 2, y + 1, z + c / 2));
+                            }
+                        }
+                        if (!getExists(x, y, z - 1)) {
+                            for (int c = 0; c < 4; c++) {
+                                verts.add(new Vector3i(x + c / 2, y + c % 2, z));
+                            }
+                        }
+                        if (!getExists(x, y, z + 1)) {
+                            for (int c = 0; c < 4; c++) {
+                                verts.add(new Vector3i(x + c / 2, y + c % 2, z + 1));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        List<Vector3i> uniqueVerts = new ArrayList(new HashSet(verts));
+        List<Integer> inds = new LinkedList();
+        for (int i = 0; i < verts.size() / 4; i++) {
+            for (int j : new int[]{0, 1, 3, 1, 2, 3}) {
+                inds.add(uniqueVerts.indexOf(verts.get(i + j)));
+            }
+        }
+
+        int[] vertices = uniqueVerts.stream().flatMapToInt(v -> IntStream.of(v.x, v.y, v.z)).toArray();
+        int[] indices = inds.stream().mapToInt(i -> i).toArray();
         VAO = VertexArrayObject.createVAO(() -> {
             new BufferObject(GL_ARRAY_BUFFER, vertices);
             new BufferObject(GL_ELEMENT_ARRAY_BUFFER, indices);
@@ -51,7 +105,6 @@ public class Chunk {
 
     public void unload() {
         VAO.destroy();
-        VAO.deactivate();
     }
 
     public void draw() {
