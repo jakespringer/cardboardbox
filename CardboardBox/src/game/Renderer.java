@@ -39,6 +39,14 @@ public class Renderer {
 
     // The window handle
     long window;
+    
+    private Camera camera;
+    private World world;
+    
+    public Renderer(Camera camera, World world) {
+    	this.camera = camera;
+    	this.world = world;
+    }
 
     public void initialize() {
         // Setup an error callback. The default implementation
@@ -104,6 +112,7 @@ public class Renderer {
     }
 
     public void draw() {
+    	world.draw(camera);
     }
 
     public void cleanup() {
