@@ -1,6 +1,5 @@
 package engine;
 
-
 import static org.lwjgl.opengl.GL20.*;
 
 public class ShaderProgram implements Activatable {
@@ -44,5 +43,10 @@ public class ShaderProgram implements Activatable {
     @Override
     public void deactivate() {
         glUseProgram(0);
+    }
+
+    public void setUniform(String name, int value) {
+        int uniform = glGetUniformLocation(shaderProgram, name);
+        glUniform1i(uniform, value);
     }
 }

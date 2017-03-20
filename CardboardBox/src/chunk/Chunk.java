@@ -3,11 +3,14 @@ package chunk;
 import static engine.Activatable.with;
 import engine.BufferObject;
 import engine.ShaderProgram;
+import engine.Texture;
 import engine.VertexArrayObject;
 import java.util.*;
 import java.util.stream.IntStream;
 import org.joml.Vector3i;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.GL_TEXTURE_3D;
+import static org.lwjgl.opengl.GL12.glTexImage3D;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
@@ -43,23 +46,27 @@ public class Chunk {
 
     private static ShaderProgram shaderProgram;
     private VertexArrayObject VAO;
+    private Texture t;
 
     public void load() {
         if (shaderProgram == null) {
-
             String vertexShaderSource = "#version 330 core\n"
                     + "layout (location = 0) in vec3 position;\n"
+                    + "out vec3 outTexCoord;\n"
                     + "void main()\n"
                     + "{\n"
                     + "    gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
+                    + "    outTexCoord = position;\n"
                     + "}";
             String fragmentShaderSource = "#version 330 core\n"
+                    + "in vec3 outTexCoord;\n"
                     + "out vec4 color;\n"
+                    + "uniform sampler3D colors;\n"
                     + "void main()\n"
                     + "{\n"
-                    + "    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+                    + "    //color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+                    + "    color = texture(colors, outTexCoord);"
                     + "}";
-
             shaderProgram = new ShaderProgram(vertexShaderSource, fragmentShaderSource);
         }
 
@@ -111,6 +118,8 @@ public class Chunk {
             }
         }
 
+        System.out.println(verts.size() + " " + uniqueVerts.size());
+
         int[] vertices = uniqueVerts.stream().flatMapToInt(v -> IntStream.of(v.x, v.y, v.z)).toArray();
         int[] indices = inds.stream().mapToInt(i -> i).toArray();
         VAO = VertexArrayObject.createVAO(() -> {
@@ -119,6 +128,17 @@ public class Chunk {
             glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * 4 /* floats are 4 bytes */, 0);
             glEnableVertexAttribArray(0);
         });
+
+        t = new Texture(GL_TEXTURE_3D);
+        t.activate();
+        int[] data = new int[32 * 32 * 32 * 3];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = (int) (Math.random() * 256);
+        }
+        glTexImage3D(t.getID(), 0, GL_RGB, 32, 32, 32, 0, GL_RGB, GL_INT, data);
+        t.deactivate();
+
+        System.out.println("Created chunk");
     }
 
     public void unload() {
@@ -126,6 +146,7 @@ public class Chunk {
     }
 
     public void draw(int chunkX, int chunkY, int chunkZ) {
+        shaderProgram.setUniform("colors", t.getID());
         with(Arrays.asList(shaderProgram, VAO), () -> {
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         });
