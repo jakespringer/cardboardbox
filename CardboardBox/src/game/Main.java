@@ -4,6 +4,8 @@ import static engine.Activatable.with;
 import engine.BufferObject;
 import engine.ShaderProgram;
 import engine.VertexArrayObject;
+import util.Resources;
+
 import java.io.File;
 import java.util.Arrays;
 import static org.lwjgl.glfw.GLFW.*;
@@ -18,6 +20,8 @@ public class Main {
     public static Renderer renderer;
 
     public static void main(String[] args) {
+    	System.out.println(Resources.getResource("glsl/test.c"));
+    	
         System.setProperty("org.lwjgl.librarypath", new File("native").getAbsolutePath());
         renderer = new Renderer();
         renderer.initialize();
