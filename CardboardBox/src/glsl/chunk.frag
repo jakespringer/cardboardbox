@@ -1,13 +1,17 @@
 #version 330 core
 
-in vec3 outTexCoord;
+in vec3 blockPos;
 
 out vec4 color;
 
-uniform sampler3D texture_sampler;
+uniform sampler2D texture_sampler;
+uniform vec3 normal;
+
+const int SIDE_LENGTH = 32;
 
 void main() {
-    //color = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-    //color = texture(colors, outTexCoord);
-    color = vec4(outTexCoord/100, 1.0f) + texture(texture_sampler, outTexCoord);
+    vec3 pos = floor(blockPos - .5 * normal);
+    vec2 samplePos = vec2(pos.z/SIDE_LENGTH + pos.y, pos.x) / SIDE_LENGTH;
+    float shade = 1 + (dot(normal, vec3(.1, 1, .2)) - 1) / 5;
+    color = texture(texture_sampler, samplePos) * shade;
 }

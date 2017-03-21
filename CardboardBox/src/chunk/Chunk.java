@@ -9,9 +9,7 @@ import java.util.*;
 import java.util.stream.IntStream;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
-import static org.lwjgl.opengl.ARBInternalformatQuery2.GL_TEXTURE_3D;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.glTexImage3D;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
@@ -47,10 +45,15 @@ public class Chunk {
         colors[x * SIDE_LENGTH * SIDE_LENGTH + y * SIDE_LENGTH + z] = 0;
     }
 
+    public static final List<Vector3i> allDirs = Arrays.asList(
+            new Vector3i(-1, 0, 0), new Vector3i(1, 0, 0),
+            new Vector3i(0, -1, 0), new Vector3i(0, 1, 0),
+            new Vector3i(0, 0, -1), new Vector3i(0, 0, 1));
+
     public static ShaderProgram shaderProgram;
-    private VertexArrayObject VAO;
+    private List<VertexArrayObject> VAOList = new LinkedList();
+    private List<Integer> numIndicesList = new LinkedList();
     private Texture t;
-    private int numIndices;
 
     public void load() {
         if (shaderProgram == null) {
@@ -58,41 +61,25 @@ public class Chunk {
                     Resources.getResource("src/glsl/chunk.frag"));
         }
 
-        colors[0] = 0xFFFFFFFF;
+        for (Vector3i dir : allDirs) {
+            createVAO(dir);
+        }
 
+        t = new Texture(colors);
+    }
+
+    private void createVAO(Vector3i dir) {
         List<Vector3i> verts = new ArrayList();
         for (int x = 0; x < SIDE_LENGTH; x++) {
             for (int y = 0; y < SIDE_LENGTH; y++) {
                 for (int z = 0; z < SIDE_LENGTH; z++) {
                     if (getExists(x, y, z)) {
-                        if (!getExists(x - 1, y, z)) {
-                            for (int c = 0; c < 4; c++) {
-                                verts.add(new Vector3i(x, y + c % 2, z + c / 2));
-                            }
-                        }
-                        if (!getExists(x + 1, y, z)) {
-                            for (int c = 0; c < 4; c++) {
-                                verts.add(new Vector3i(x + 1, y + c % 2, z + c / 2));
-                            }
-                        }
-                        if (!getExists(x, y - 1, z)) {
-                            for (int c = 0; c < 4; c++) {
-                                verts.add(new Vector3i(x + c % 2, y, z + c / 2));
-                            }
-                        }
-                        if (!getExists(x, y + 1, z)) {
-                            for (int c = 0; c < 4; c++) {
-                                verts.add(new Vector3i(x + c % 2, y + 1, z + c / 2));
-                            }
-                        }
-                        if (!getExists(x, y, z - 1)) {
-                            for (int c = 0; c < 4; c++) {
-                                verts.add(new Vector3i(x + c / 2, y + c % 2, z));
-                            }
-                        }
-                        if (!getExists(x, y, z + 1)) {
-                            for (int c = 0; c < 4; c++) {
-                                verts.add(new Vector3i(x + c / 2, y + c % 2, z + 1));
+                        if (!getExists(x + dir.x, y + dir.y, z + dir.z)) {
+                            for (int c = 0; c < 8; c++) {
+                                Vector3i toAdd = new Vector3i(c % 2, c / 2 % 2, c / 4);
+                                if ((toAdd.x - .5) * dir.x + (toAdd.y - .5) * dir.y + (toAdd.z - .5) * dir.z > 0) {
+                                    verts.add(new Vector3i(x, y, z).add(toAdd));
+                                }
                             }
                         }
                     }
@@ -110,54 +97,36 @@ public class Chunk {
 
         int[] vertices = uniqueVerts.stream().flatMapToInt(v -> IntStream.of(v.x, v.y, v.z)).toArray();
         int[] indices = inds.stream().mapToInt(i -> i).toArray();
-        VAO = VertexArrayObject.createVAO(() -> {
+
+        VAOList.add(VertexArrayObject.createVAO(() -> {
             new BufferObject(GL_ARRAY_BUFFER, vertices);
-            new BufferObject(GL_ELEMENT_ARRAY_BUFFER, indices);
             glVertexAttribPointer(0, 3, GL_INT, false, 3 * 4 /* floats are 4 bytes */, 0);
+            new BufferObject(GL_ELEMENT_ARRAY_BUFFER, indices);
             glEnableVertexAttribArray(0);
-        });
-
-        numIndices = indices.length;
-
-//        System.out.println(vertices.length + " " + indices.length);
-//        if (numIndices < 100) {
-//            System.out.println(verts);
-//            System.out.println(Arrays.toString(vertices));
-//            System.out.println(Arrays.toString(indices));
-//            for (int i = 0; i < numIndices; i += 6) {
-//                for (int j = 0; j < 6; j++) {
-//                    System.out.println(uniqueVerts.get(indices[i + j]));
-//                }
-//                System.out.println();
-//                for (int j = 0; j < 4; j++) {
-//                    System.out.println(verts.get(i * 4 / 6 + j));
-//                }
-//                System.out.println();
-//            }
-//        }
-        t = new Texture(GL_TEXTURE_3D);
-        t.activate();
-        float[] data = new float[32 * 32 * 32 * 3];
-        for (int i = 0; i < data.length; i++) {
-            data[i] = 0xFFFFFFFF;//(int) (Math.random() * 256);
-        }
-        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, SIDE_LENGTH, SIDE_LENGTH, SIDE_LENGTH, 0, GL_RGB, GL_FLOAT, data);
-        t.deactivate();
-//        t = new Texture("sprites/rock.png");
+        }));
+        numIndicesList.add(indices.length);
     }
 
     public void unload() {
-        VAO.destroy();
+        for (VertexArrayObject VAO : VAOList) {
+            VAO.destroy();
+        }
     }
 
     public void draw(int chunkX, int chunkY, int chunkZ) {
         shaderProgram.setUniform("worldMatrix", TestMain.camera.getViewMatrix(new Vector3f(chunkX, chunkY, chunkZ).mul(SIDE_LENGTH)));
-        shaderProgram.setUniform("texture_sampler", 0);
+//        shaderProgram.setUniform("texture_sampler", 0);
 
-        t.activate();
-//        shaderProgram.setUniform("blockColors", t.getID());
-        with(Arrays.asList(shaderProgram, t, VAO), () -> {
-            glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
-        });
+        for (int i = 0; i < 6; i++) {
+
+            shaderProgram.setUniform("normal", allDirs.get(i));
+
+            int numIndices = numIndicesList.get(i);
+            with(Arrays.asList(shaderProgram, t, VAOList.get(i)), () -> {
+                glEnableVertexAttribArray(0);
+                glEnableVertexAttribArray(1);
+                glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+            });
+        }
     }
 }

@@ -1,6 +1,8 @@
 package engine;
 
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector3i;
 import static org.lwjgl.opengl.GL20.*;
 
 public class ShaderProgram implements Activatable {
@@ -52,25 +54,25 @@ public class ShaderProgram implements Activatable {
         glUniform1i(uniform, value);
     }
 
+    public void setUniform(String name, Vector3f value) {
+        activate();
+        int uniform = glGetUniformLocation(shaderProgram, name);
+        glUniform3fv(uniform, new float[]{value.x, value.y, value.z});
+    }
+
+    public void setUniform(String name, Vector3i value) {
+        activate();
+        int uniform = glGetUniformLocation(shaderProgram, name);
+        glUniform3fv(uniform, new float[]{value.x, value.y, value.z});
+    }
+
     public void setUniform(String name, Matrix4f mat) {
         activate();
-
-        float[] f = {
+        int uniform = glGetUniformLocation(shaderProgram, name);
+        glUniformMatrix4fv(uniform, false, new float[]{
             mat.m00(), mat.m01(), mat.m02(), mat.m03(),
             mat.m10(), mat.m11(), mat.m12(), mat.m13(),
             mat.m20(), mat.m21(), mat.m22(), mat.m23(),
-            mat.m30(), mat.m31(), mat.m32(), mat.m33()};
-
-        int uniform = glGetUniformLocation(shaderProgram, name);
-        glUniformMatrix4fv(uniform, false, f);
+            mat.m30(), mat.m31(), mat.m32(), mat.m33()});
     }
-
-//        try (MemoryStack stack = MemoryStack.stackPush()) {
-//            // Dump the matrix into a float buffer
-//            FloatBuffer fb = stack.mallocFloat(16);
-//            value.get(fb);
-//            int uniform = glGetUniformLocation(shaderProgram, name);
-//            glUniformMatrix4fv(uniform, false, fb);
-//        }
-//    }
 }

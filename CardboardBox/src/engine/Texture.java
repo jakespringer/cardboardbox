@@ -1,5 +1,6 @@
 package engine;
 
+import chunk.Chunk;
 import de.matthiasmann.twl.utils.PNGDecoder;
 import de.matthiasmann.twl.utils.PNGDecoder.Format;
 import java.io.FileInputStream;
@@ -25,6 +26,11 @@ public class Texture extends Destructible implements Activatable {
         deactivate();
     }
 
+    public Texture(String fileName) {
+        texture = loadTexture(fileName);
+        type = GL_TEXTURE_2D;
+    }
+
     @Override
     public void activate() {
         glActiveTexture(GL_TEXTURE0);
@@ -38,11 +44,6 @@ public class Texture extends Destructible implements Activatable {
 
     public int getID() {
         return texture;
-    }
-
-    public Texture(String fileName) {
-        texture = loadTexture(fileName);
-        type = GL_TEXTURE_2D;
     }
 
     private static int loadTexture(String fileName) {
@@ -76,5 +77,36 @@ public class Texture extends Destructible implements Activatable {
             ex.printStackTrace();
         }
         return 0;
+    }
+
+    // Generates a chunk texture
+    public Texture(int[] colors) {
+        texture = glGenTextures();
+        type = GL_TEXTURE_2D;
+
+        // Bind the texture
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        // Tell OpenGL how to unpack the RGBA bytes. Each component is 1 byte size
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        // Upload the texture data
+        float[] mcolors = new float[colors.length * 3];
+        for (int i = 0; i < colors.length; i++) {
+            int col = colors[i];
+            if (col != 0) {
+                for (int j = 0; j < 3; j++) {
+                    mcolors[3 * i + 2 - j] = (col % 256) / 255.0f;//* (Integer.MAX_VALUE / 256);
+                    col /= 256;
+//                    System.out.println(mcolors[3 * i + j]);
+                }
+            }
+        }
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Chunk.SIDE_LENGTH * Chunk.SIDE_LENGTH, Chunk.SIDE_LENGTH, 0, GL_RGB, GL_FLOAT, mcolors);
+//        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Chunk.SIDE_LENGTH * Chunk.SIDE_LENGTH, Chunk.SIDE_LENGTH, 0, GL_RGB, GL_INT, colors);
+        // Generate Mip Map
+        glGenerateMipmap(GL_TEXTURE_2D);
     }
 }

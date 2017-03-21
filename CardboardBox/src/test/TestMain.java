@@ -1,36 +1,18 @@
 package test;
 
-import static game.Renderer.HEIGHT;
-import static game.Renderer.WIDTH;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
-import static org.lwjgl.glfw.GLFW.glfwGetKey;
-import static org.lwjgl.glfw.GLFW.glfwPollEvents;
-import static org.lwjgl.glfw.GLFW.glfwSetCursorPos;
-import static org.lwjgl.glfw.GLFW.glfwSetCursorPosCallback;
-import static org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose;
-import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
-import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
-import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.glClear;
-import static org.lwjgl.opengl.GL11.glClearColor;
-
-import java.io.File;
-
-import org.joml.Vector3f;
-import org.joml.Vector3fc;
-import org.lwjgl.glfw.GLFWCursorPosCallback;
-
 import chunk.SimplexNoiseChunkSupplier;
 import game.Camera;
 import game.Input;
 import game.Renderer;
+import static game.Renderer.HEIGHT;
+import static game.Renderer.WIDTH;
 import game.World;
+import java.io.File;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
+import static org.lwjgl.glfw.GLFW.*;
+import org.lwjgl.glfw.GLFWCursorPosCallback;
+import static org.lwjgl.opengl.GL11.*;
 
 public class TestMain {
 
@@ -55,9 +37,6 @@ public class TestMain {
 
         initInput(renderer.window);
 
-        SimpleRectTex r = new SimpleRectTex(new Vector3f(0, -5, 0));
-        SimpleRect r2 = new SimpleRect(new Vector3f(0, -5, 0));
-
         while (!glfwWindowShouldClose(renderer.window)) {
             glfwPollEvents();
 
@@ -79,40 +58,37 @@ public class TestMain {
             // Render
 //            camera.position = new Vector3f(0, 0, -5);
             if (glfwGetKey(renderer.window, GLFW_KEY_W) != 0) {
-            	Vector3fc forward = camera.getLookAt();
-            	Vector3f horizontalForward = forward.mul(0.3f, new Vector3f());
-            	horizontalForward.y = 0;
+                Vector3fc forward = camera.getLookAt();
+                Vector3f horizontalForward = forward.mul(0.3f, new Vector3f());
+                horizontalForward.y = 0;
                 camera.position.add(horizontalForward);
             }
             if (glfwGetKey(renderer.window, GLFW_KEY_S) != 0) {
-            	Vector3fc forward = camera.getLookAt();
-            	Vector3f horizontalForward = forward.mul(-0.3f, new Vector3f());
-            	horizontalForward.y = 0;
+                Vector3fc forward = camera.getLookAt();
+                Vector3f horizontalForward = forward.mul(-0.3f, new Vector3f());
+                horizontalForward.y = 0;
                 camera.position.add(horizontalForward);
             }
             if (glfwGetKey(renderer.window, GLFW_KEY_A) != 0) {
-            	Vector3fc forward = camera.getLookAt();
-            	Vector3f horizontalForward = forward.mul(0.3f, new Vector3f());
-            	horizontalForward.y = 0;
-            	horizontalForward.rotateAbout((float) Math.PI/2.f, 0, 1, 0);
+                Vector3fc forward = camera.getLookAt();
+                Vector3f horizontalForward = forward.mul(0.3f, new Vector3f());
+                horizontalForward.y = 0;
+                horizontalForward.rotateAbout((float) Math.PI / 2.f, 0, 1, 0);
                 camera.position.add(horizontalForward);
             }
             if (glfwGetKey(renderer.window, GLFW_KEY_D) != 0) {
-            	Vector3fc forward = camera.getLookAt();
-            	Vector3f horizontalForward = forward.mul(0.3f, new Vector3f());
-            	horizontalForward.y = 0;
-            	horizontalForward.rotateAbout((float) -Math.PI/2.f, 0, 1, 0);
+                Vector3fc forward = camera.getLookAt();
+                Vector3f horizontalForward = forward.mul(0.3f, new Vector3f());
+                horizontalForward.y = 0;
+                horizontalForward.rotateAbout((float) -Math.PI / 2.f, 0, 1, 0);
                 camera.position.add(horizontalForward);
             }
             if (glfwGetKey(renderer.window, GLFW_KEY_SPACE) != 0) {
-                camera.position.add(0, .3f, 0);
-            }
-            if (glfwGetKey(renderer.window, GLFW_KEY_LEFT_SHIFT) != 0) {
                 camera.position.add(0, -.3f, 0);
             }
-
-            r.draw();
-            r2.draw();
+            if (glfwGetKey(renderer.window, GLFW_KEY_LEFT_SHIFT) != 0) {
+                camera.position.add(0, .3f, 0);
+            }
 
             glfwSwapBuffers(renderer.window);
         }

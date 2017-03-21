@@ -1,6 +1,7 @@
 package util;
 
 public class Noise {
+
     public double seed;
 
     public Noise(double seed) {
@@ -9,6 +10,10 @@ public class Noise {
 
     public double fbm(double x, double y, int octaves, double frequency) {
         return multi(x, y, octaves, frequency) + multi(x, y, octaves, frequency * 20) / 20;
+    }
+
+    public double fbm(double x, double y, double z, int octaves, double frequency) {
+        return multi(x, y, z, octaves, frequency) + multi(x, y, z, octaves, frequency * 20) / 20;
     }
 
     public double fbmRidged(double x, double y, int octaves, double frequency) {
@@ -22,11 +27,11 @@ public class Noise {
         }
         return r;
     }
-    
-    public double multiBetterOffset(double x, double y, int octaves, double frequency) {
+
+    public double multi(double x, double y, double z, int octaves, double frequency) {
         double r = 0;
         for (int i = 0; i < octaves; i++) {
-            r += perlinBetterOffset(x * Math.pow(2, i) * frequency, y * Math.pow(2, i) * frequency) / Math.pow(2, i);
+            r += perlin(x * Math.pow(2, i) * frequency, y * Math.pow(2, i) * frequency, z * Math.pow(2, i) * frequency) / Math.pow(2, i);
         }
         return r;
     }
@@ -42,11 +47,11 @@ public class Noise {
     public double perlin(double x, double y) {
         return SimplexNoise.noise(x, y, seed);
     }
-    
-    public double perlinBetterOffset(double x, double y){
-        return SimplexNoise.noise(x+100000*seed, y+100000*seed, 10000*seed);
+
+    public double perlin(double x, double y, double z) {
+        return SimplexNoise.noise(x, y, z, seed);
     }
-    
+
     public double random(double x, double y) {
         return multi(x, y, 1, 1000000);
     }
