@@ -29,6 +29,10 @@ public class Camera {
 				.lookAt(eye, center, up);
 	}
 	
+	public Matrix4f getViewMatrix() {
+		return new Matrix4f().lookAt(eye, center, up);
+	}
+	
 	public Vector3fc getEye() {
 		return eye;
 	}
