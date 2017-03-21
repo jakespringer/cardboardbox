@@ -27,7 +27,8 @@ public class SimplexNoiseChunkSupplier implements ChunkSupplier {
 			Chunk chunk = null;
 			for (int i=0; i<Chunk.SIDE_LENGTH; ++i) {
 				for (int j=0; j<Chunk.SIDE_LENGTH; ++j) {
-					int height = (int) Math.floor(noise.fbm(x*Chunk.SIDE_LENGTH+i, z*Chunk.SIDE_LENGTH+j, 4, 100));
+					int height = (int) Math.floor((noise.perlin((x*Chunk.SIDE_LENGTH+i)/100.0f, (z*Chunk.SIDE_LENGTH+j)/100.0f) + 1)*10);
+//					System.out.println(((x*Chunk.SIDE_LENGTH+i)/100.0f) + " " + ((z*Chunk.SIDE_LENGTH+j)/100.0f));
 					if ((height / Chunk.SIDE_LENGTH) == y) {
 						if (chunk == null) {
 							chunk = new Chunk();

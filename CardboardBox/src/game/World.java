@@ -10,7 +10,7 @@ import chunk.ChunkSupplier;
 import util.VectorKey;
 
 public class World {
-	private static final int RENDER_DISTANCE = 2;
+	private static final int RENDER_DISTANCE = 4;
 	private ChunkSupplier supplier;
 	private Vector3ic lowerBoundLoaded;
 	private Vector3ic upperBoundLoaded;

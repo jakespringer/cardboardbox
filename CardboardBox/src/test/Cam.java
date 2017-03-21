@@ -2,6 +2,7 @@ package test;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
 public class Cam {
 
@@ -10,7 +11,6 @@ public class Cam {
     public Vector3f up = new Vector3f(0, 0, 1);
 
     public Matrix4f getViewMatrix(Vector3f posOffset) {
-
         posOffset = posOffset.sub(position, new Vector3f());
 
         // If the pitch and yaw angles are in degrees,
@@ -39,5 +39,11 @@ public class Cam {
         Matrix4f projectionMatrix = new Matrix4f();
         projectionMatrix.perspective(fov, aspectRatio, zNear, zFar);
         return projectionMatrix;
+    }
+    
+    public Vector3fc getLookAt() {
+    	return new Vector3f((float) (Math.sin(yaw)*Math.cos(pitch)),
+    						(float) (Math.sin(yaw)*Math.sin(pitch)),
+    						(float) (Math.cos(yaw)));
     }
 }
