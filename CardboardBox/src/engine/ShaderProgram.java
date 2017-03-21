@@ -1,7 +1,9 @@
 package engine;
 
-
+import java.nio.FloatBuffer;
+import org.joml.Matrix4f;
 import static org.lwjgl.opengl.GL20.*;
+import org.lwjgl.system.MemoryStack;
 
 public class ShaderProgram implements Activatable {
 
@@ -44,5 +46,22 @@ public class ShaderProgram implements Activatable {
     @Override
     public void deactivate() {
         glUseProgram(0);
+    }
+
+    public void setUniform(String name, int value) {
+        activate();
+        int uniform = glGetUniformLocation(shaderProgram, name);
+        glUniform1i(uniform, value);
+    }
+
+    public void setUniform(String name, Matrix4f value) {
+        activate();
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            // Dump the matrix into a float buffer
+            FloatBuffer fb = stack.mallocFloat(16);
+            value.get(fb);
+            int uniform = glGetUniformLocation(shaderProgram, name);
+            glUniformMatrix4fv(uniform, false, fb);
+        }
     }
 }

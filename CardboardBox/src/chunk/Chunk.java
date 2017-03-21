@@ -3,15 +3,21 @@ package chunk;
 import static engine.Activatable.with;
 import engine.BufferObject;
 import engine.ShaderProgram;
+import engine.Texture;
 import engine.VertexArrayObject;
 import java.util.*;
 import java.util.stream.IntStream;
+import org.joml.Vector3f;
 import org.joml.Vector3i;
+import static org.lwjgl.opengl.ARBInternalformatQuery2.GL_TEXTURE_3D;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.glTexImage3D;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import test.TestMain;
+import util.Resources;
 
 public class Chunk {
 
@@ -41,27 +47,18 @@ public class Chunk {
         colors[x * SIDE_LENGTH * SIDE_LENGTH + y * SIDE_LENGTH + z] = 0;
     }
 
-    private static ShaderProgram shaderProgram;
+    public static ShaderProgram shaderProgram;
     private VertexArrayObject VAO;
+    private Texture t;
+    private int numIndices;
 
     public void load() {
         if (shaderProgram == null) {
-
-            String vertexShaderSource = "#version 330 core\n"
-                    + "layout (location = 0) in vec3 position;\n"
-                    + "void main()\n"
-                    + "{\n"
-                    + "    gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
-                    + "}";
-            String fragmentShaderSource = "#version 330 core\n"
-                    + "out vec4 color;\n"
-                    + "void main()\n"
-                    + "{\n"
-                    + "    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-                    + "}";
-
-            shaderProgram = new ShaderProgram(vertexShaderSource, fragmentShaderSource);
+            shaderProgram = new ShaderProgram(Resources.getResource("src/glsl/chunk.vert"),
+                    Resources.getResource("src/glsl/chunk.frag"));
         }
+
+        colors[0] = 0xFFFFFFFF;
 
         List<Vector3i> verts = new ArrayList();
         for (int x = 0; x < SIDE_LENGTH; x++) {
@@ -106,8 +103,8 @@ public class Chunk {
         List<Vector3i> uniqueVerts = new ArrayList(new HashSet(verts));
         List<Integer> inds = new LinkedList();
         for (int i = 0; i < verts.size() / 4; i++) {
-            for (int j : new int[]{0, 1, 3, 1, 2, 3}) {
-                inds.add(uniqueVerts.indexOf(verts.get(i + j)));
+            for (int j : new int[]{0, 1, 2, 1, 2, 3}) {
+                inds.add(uniqueVerts.indexOf(verts.get(4 * i + j)));
             }
         }
 
@@ -116,9 +113,37 @@ public class Chunk {
         VAO = VertexArrayObject.createVAO(() -> {
             new BufferObject(GL_ARRAY_BUFFER, vertices);
             new BufferObject(GL_ELEMENT_ARRAY_BUFFER, indices);
-            glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * 4 /* floats are 4 bytes */, 0);
+            glVertexAttribPointer(0, 3, GL_INT, false, 3 * 4 /* floats are 4 bytes */, 0);
             glEnableVertexAttribArray(0);
         });
+
+        numIndices = indices.length;
+
+//        System.out.println(vertices.length + " " + indices.length);
+//        if (numIndices < 100) {
+//            System.out.println(verts);
+//            System.out.println(Arrays.toString(vertices));
+//            System.out.println(Arrays.toString(indices));
+//            for (int i = 0; i < numIndices; i += 6) {
+//                for (int j = 0; j < 6; j++) {
+//                    System.out.println(uniqueVerts.get(indices[i + j]));
+//                }
+//                System.out.println();
+//                for (int j = 0; j < 4; j++) {
+//                    System.out.println(verts.get(i * 4 / 6 + j));
+//                }
+//                System.out.println();
+//            }
+//        }
+        t = new Texture(GL_TEXTURE_3D);
+        t.activate();
+        float[] data = new float[32 * 32 * 32 * 3];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = 0xFFFFFFFF;//(int) (Math.random() * 256);
+        }
+        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, SIDE_LENGTH, SIDE_LENGTH, SIDE_LENGTH, 0, GL_RGB, GL_FLOAT, data);
+        t.deactivate();
+//        t = new Texture("sprites/rock.png");
     }
 
     public void unload() {
@@ -126,8 +151,12 @@ public class Chunk {
     }
 
     public void draw(int chunkX, int chunkY, int chunkZ) {
+        shaderProgram.setUniform("worldMatrix", TestMain.camera.getViewMatrix(new Vector3f(chunkX, chunkY, chunkZ).mul(SIDE_LENGTH)));
+
+        t.activate();
+        shaderProgram.setUniform("blockColors", t.getID());
         with(Arrays.asList(shaderProgram, VAO), () -> {
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
         });
     }
 }
