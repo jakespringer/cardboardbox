@@ -122,7 +122,8 @@ public class SimpleRectTex {
     public Vector3f pos;
 
     public void draw() {
-        shaderProgram.setUniform("worldMatrix", TestMain.camera.getViewMatrix(pos));
+
+        shaderProgram.setUniform("modelViewMatrix", TestMain.camera.getViewMatrix(pos));
         shaderProgram.setUniform("projectionMatrix", Cam.getProjectionMatrix(70, 640, 480, .1f, 1000));
 
         shaderProgram.setUniform("texture_sampler", 0);

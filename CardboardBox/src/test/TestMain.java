@@ -54,7 +54,8 @@ public class TestMain {
                 chunk.Chunk.shaderProgram.setUniform("worldMatrix", camera.getViewMatrix(new Vector3f(0, 0, 0)));
                 chunk.Chunk.shaderProgram.setUniform("projectionMatrix", Cam.getProjectionMatrix(70, 640, 480, .1f, 1000));
             }
-            //renderer.draw();
+
+            renderer.draw();
 
             // Render
 //            camera.position = new Vector3f(0, 0, -5);

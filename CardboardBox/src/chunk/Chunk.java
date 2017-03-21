@@ -152,10 +152,11 @@ public class Chunk {
 
     public void draw(int chunkX, int chunkY, int chunkZ) {
         shaderProgram.setUniform("worldMatrix", TestMain.camera.getViewMatrix(new Vector3f(chunkX, chunkY, chunkZ).mul(SIDE_LENGTH)));
+        shaderProgram.setUniform("texture_sampler", 0);
 
         t.activate();
-        shaderProgram.setUniform("blockColors", t.getID());
-        with(Arrays.asList(shaderProgram, VAO), () -> {
+//        shaderProgram.setUniform("blockColors", t.getID());
+        with(Arrays.asList(shaderProgram, t, VAO), () -> {
             glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
         });
     }
