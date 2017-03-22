@@ -1,6 +1,8 @@
-package engine;
+package opengl;
 
 
+import engine.Activatable;
+import engine.Destructible;
 import static org.lwjgl.opengl.ARBVertexArrayObject.*;
 
 public class VertexArrayObject extends Destructible implements Activatable {

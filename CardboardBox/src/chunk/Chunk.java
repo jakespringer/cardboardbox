@@ -1,12 +1,12 @@
 package chunk;
 
-import static engine.Activatable.with;
-import engine.BufferObject;
-import engine.ShaderProgram;
-import engine.Texture;
-import engine.VertexArrayObject;
+import engine.Window;
 import java.util.*;
 import java.util.stream.IntStream;
+import opengl.BufferObject;
+import opengl.ShaderProgram;
+import opengl.Texture;
+import opengl.VertexArrayObject;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 import static org.lwjgl.opengl.GL11.*;
@@ -14,7 +14,6 @@ import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
-import test.TestMain;
 import util.Resources;
 
 public class Chunk {
@@ -108,13 +107,13 @@ public class Chunk {
     }
 
     public void unload() {
-        for (VertexArrayObject VAO : VAOList) {
-            VAO.destroy();
-        }
+//        for (VertexArrayObject VAO : VAOList) {
+//            VAO.destroy();
+//        }
     }
 
     public void draw(int chunkX, int chunkY, int chunkZ) {
-        shaderProgram.setUniform("worldMatrix", TestMain.camera.getViewMatrix(new Vector3f(chunkX, chunkY, chunkZ).mul(SIDE_LENGTH)));
+        shaderProgram.setUniform("worldMatrix", Window.camera.getWorldMatrix(new Vector3f(chunkX, chunkY, chunkZ).mul(SIDE_LENGTH)));
 //        shaderProgram.setUniform("texture_sampler", 0);
 
         for (int i = 0; i < 6; i++) {
@@ -122,11 +121,14 @@ public class Chunk {
             shaderProgram.setUniform("normal", allDirs.get(i));
 
             int numIndices = numIndicesList.get(i);
-            with(Arrays.asList(shaderProgram, t, VAOList.get(i)), () -> {
-                glEnableVertexAttribArray(0);
-                glEnableVertexAttribArray(1);
-                glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
-            });
+            shaderProgram.activate();
+            t.activate();
+            VAOList.get(i).activate();
+//            with(Arrays.asList(shaderProgram, t, VAOList.get(i)), () -> {
+//                glEnableVertexAttribArray(0);
+//                glEnableVertexAttribArray(1);
+            glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+//            });
         }
     }
 }

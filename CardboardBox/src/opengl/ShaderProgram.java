@@ -1,5 +1,7 @@
-package engine;
+package opengl;
 
+import engine.Activatable;
+import java.util.HashMap;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
@@ -48,27 +50,36 @@ public class ShaderProgram implements Activatable {
         glUseProgram(0);
     }
 
+    private final HashMap<String, Integer> uniformLocations = new HashMap();
+
+    private int getUniformLocation(String name) {
+        if (!uniformLocations.containsKey(name)) {
+            uniformLocations.put(name, glGetUniformLocation(shaderProgram, name));
+        }
+        return uniformLocations.get(name);
+    }
+
     public void setUniform(String name, int value) {
         activate();
-        int uniform = glGetUniformLocation(shaderProgram, name);
+        int uniform = getUniformLocation(name);
         glUniform1i(uniform, value);
     }
 
     public void setUniform(String name, Vector3f value) {
         activate();
-        int uniform = glGetUniformLocation(shaderProgram, name);
+        int uniform = getUniformLocation(name);
         glUniform3fv(uniform, new float[]{value.x, value.y, value.z});
     }
 
     public void setUniform(String name, Vector3i value) {
         activate();
-        int uniform = glGetUniformLocation(shaderProgram, name);
+        int uniform = getUniformLocation(name);
         glUniform3fv(uniform, new float[]{value.x, value.y, value.z});
     }
 
     public void setUniform(String name, Matrix4f mat) {
         activate();
-        int uniform = glGetUniformLocation(shaderProgram, name);
+        int uniform = getUniformLocation(name);
         glUniformMatrix4fv(uniform, false, new float[]{
             mat.m00(), mat.m01(), mat.m02(), mat.m03(),
             mat.m10(), mat.m11(), mat.m12(), mat.m13(),

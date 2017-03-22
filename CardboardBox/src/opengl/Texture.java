@@ -1,8 +1,10 @@
-package engine;
+package opengl;
 
 import chunk.Chunk;
 import de.matthiasmann.twl.utils.PNGDecoder;
 import de.matthiasmann.twl.utils.PNGDecoder.Format;
+import engine.Activatable;
+import engine.Destructible;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;

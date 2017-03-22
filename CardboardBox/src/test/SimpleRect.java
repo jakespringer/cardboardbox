@@ -1,9 +1,11 @@
 package test;
 
+import engine.Camera;
 import engine.Activatable;
-import engine.BufferObject;
-import engine.ShaderProgram;
-import engine.VertexArrayObject;
+import engine.Window;
+import opengl.BufferObject;
+import opengl.ShaderProgram;
+import opengl.VertexArrayObject;
 import java.util.Arrays;
 import org.joml.Vector3f;
 import static org.lwjgl.opengl.GL11.*;
@@ -46,8 +48,8 @@ public class SimpleRect {
     }
 
     public void draw() {
-        shaderProgram.setUniform("worldMatrix", TestMain.camera.getViewMatrix(pos));
-        shaderProgram.setUniform("projectionMatrix", Cam.getProjectionMatrix(70, 640, 480, .1f, 1000));
+        shaderProgram.setUniform("worldMatrix", Window.camera.getWorldMatrix(pos));
+        shaderProgram.setUniform("projectionMatrix", Camera.getProjectionMatrix(70, 640, 480, .1f, 1000));
         Activatable.with(Arrays.asList(shaderProgram, VAO), () -> {
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         });

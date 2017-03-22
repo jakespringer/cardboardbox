@@ -1,6 +1,8 @@
-package engine;
+package opengl;
 
 
+import engine.Activatable;
+import engine.Destructible;
 import static org.lwjgl.opengl.GL15.*;
 
 public class BufferObject extends Destructible implements Activatable {

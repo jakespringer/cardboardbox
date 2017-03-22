@@ -1,5 +1,10 @@
 package test;
 
+import engine.Camera;
+import opengl.ShaderProgram;
+import opengl.BufferObject;
+import opengl.Texture;
+import opengl.VertexArrayObject;
 import engine.*;
 import java.util.Arrays;
 import org.joml.Vector3f;
@@ -122,8 +127,8 @@ public class SimpleRectTex {
     public Vector3f pos;
 
     public void draw() {
-        shaderProgram.setUniform("modelViewMatrix", TestMain.camera.getViewMatrix(pos));
-        shaderProgram.setUniform("projectionMatrix", Cam.getProjectionMatrix(70, 640, 480, .1f, 1000));
+        shaderProgram.setUniform("modelViewMatrix", Window.camera.getWorldMatrix(pos));
+        shaderProgram.setUniform("projectionMatrix", Camera.getProjectionMatrix(70, 640, 480, .1f, 1000));
 
         shaderProgram.setUniform("texture_sampler", 0);
 

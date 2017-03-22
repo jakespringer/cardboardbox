@@ -1,6 +1,5 @@
 package engine;
 
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -23,7 +22,7 @@ public abstract class Destructible {
      * Creates the destructible. All other destructibles created inside its
      * create method will be added as children to this destructible.
      */
-    public final void create() {
+    public void create() {
         STACK.push(this);
         createInner();
         STACK.pop();
@@ -40,7 +39,7 @@ public abstract class Destructible {
      * destructible. It will remove this destructible as a child from its
      * parent.
      */
-    public final void destroy() {
+    public void destroy() {
         destroyInner();
         setParent(null);
         new ArrayList<>(children).forEach(Destructible::destroy);

@@ -27,13 +27,15 @@ public class SimplexNoiseChunkSupplier implements ChunkSupplier {
             Chunk chunk = null;
             for (int i = 0; i < Chunk.SIDE_LENGTH; ++i) {
                 for (int j = 0; j < Chunk.SIDE_LENGTH; ++j) {
-                    int height = (int) Math.floor((noise.fbm(x * Chunk.SIDE_LENGTH - i, z * Chunk.SIDE_LENGTH - j, 4, 1 / 200.) + 2) * 15);
+                    int height = (int) Math.floor((noise.fbm(x * Chunk.SIDE_LENGTH + i, y * Chunk.SIDE_LENGTH + j, 4, 1 / 200.) + 2) * 15);
 //                    int height = (int) Math.floor((noise.perlin((x * Chunk.SIDE_LENGTH - i) / 100.0f, (z * Chunk.SIDE_LENGTH - j) / 100.0f) + 1) * 10);
-                    if ((height / Chunk.SIDE_LENGTH) == -y) {
+                    if ((height / Chunk.SIDE_LENGTH) == z) {
                         if (chunk == null) {
                             chunk = new Chunk();
                         }
-                        chunk.setColor(i, height % Chunk.SIDE_LENGTH, j, 0x00AA00);
+                        for (int k = 0; k <= height % Chunk.SIDE_LENGTH; k++) {
+                            chunk.setColor(i, j, k, 0x00AA00);
+                        }
                     }
                 }
             }
