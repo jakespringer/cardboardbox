@@ -3,88 +3,89 @@ package game;
 import chunk.Chunk;
 import chunk.ChunkSupplier;
 import engine.Entity;
+import engine.GameLoop;
 import engine.Window;
 import java.util.HashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import opengl.ShaderProgram;
+import org.joml.Vector3f;
 import org.joml.Vector3fc;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
+import util.Resources;
 import util.VectorKey;
 
 public class World extends Entity {
 
-    private static final int RENDER_DISTANCE = 4;
+    public static final int LOAD_DISTANCE = 6;
+    public static final int UNLOAD_DISTANCE = 30;
+
+    public static final int NUM_THREADS = 6;
+
     private ChunkSupplier supplier;
-    private Vector3ic lowerBoundLoaded;
-    private Vector3ic upperBoundLoaded;
     private HashMap<VectorKey, Chunk> chunks = new HashMap<>();
+    private ThreadPoolExecutor threadPool;
 
     public World(ChunkSupplier supplier) {
         this.supplier = supplier;
-        this.lowerBoundLoaded = new Vector3i(0, 0, 0);
-        this.upperBoundLoaded = new Vector3i(0, 0, 0);
+        threadPool = new ThreadPoolExecutor(NUM_THREADS, NUM_THREADS, 60, TimeUnit.SECONDS, new LinkedBlockingQueue());
+        threadPool.allowCoreThreadTimeOut(true);
     }
 
     @Override
-    public void draw() {
+    protected void createInner() {
+        if (Chunk.shaderProgram == null) {
+            Chunk.shaderProgram = new ShaderProgram(Resources.getResource("src/glsl/chunk.vert"), Resources.getResource("src/glsl/chunk.frag"));
+        }
+    }
+
+    @Override
+    protected void destroyInner() {
+        threadPool.shutdownNow();
+    }
+
+    @Override
+    public void update() {
         Vector3ic homeChunk = posToChunk(Window.camera.position);
         int x = homeChunk.x();
         int y = homeChunk.y();
         int z = homeChunk.z();
 
-        int upperX = x + RENDER_DISTANCE;
-        int upperY = y + RENDER_DISTANCE;
-        int upperZ = z + RENDER_DISTANCE;
-        int lowerX = x - RENDER_DISTANCE;
-        int lowerY = y - RENDER_DISTANCE;
-        int lowerZ = z - RENDER_DISTANCE;
-        int upperLoadedX = upperBoundLoaded.x();
-        int upperLoadedY = upperBoundLoaded.y();
-        int upperLoadedZ = upperBoundLoaded.z();
-        int lowerLoadedX = lowerBoundLoaded.x();
-        int lowerLoadedY = lowerBoundLoaded.y();
-        int lowerLoadedZ = lowerBoundLoaded.z();
-
-        for (int i = lowerLoadedX; i < upperLoadedX; ++i) {
-            for (int j = lowerLoadedY; j < upperLoadedY; ++j) {
-                for (int k = lowerLoadedZ; k < upperLoadedZ; ++k) {
-                    if (!((lowerX <= i && i < upperX)
-                            && (lowerY <= j && j < upperY)
-                            && (lowerZ <= k && k < upperZ))) {
-                        VectorKey key = new VectorKey(i, j, k);
-                        chunks.get(key).unload();
-                        chunks.remove(key);
-                    }
-                }
-            }
-        }
+        int upperX = x + LOAD_DISTANCE;
+        int upperY = y + LOAD_DISTANCE;
+        int upperZ = z + LOAD_DISTANCE;
+        int lowerX = x - LOAD_DISTANCE;
+        int lowerY = y - LOAD_DISTANCE;
+        int lowerZ = z - LOAD_DISTANCE;
 
         for (int i = lowerX; i < upperX; ++i) {
             for (int j = lowerY; j < upperY; ++j) {
                 for (int k = lowerZ; k < upperZ; ++k) {
-                    if (!((lowerLoadedX <= i && i < upperLoadedX)
-                            && (lowerLoadedY <= j && j < upperLoadedY)
-                            && (lowerLoadedZ <= k && k < upperLoadedZ))) {
-                        VectorKey key = new VectorKey(i, j, k);
-                        chunks.put(key, supplier.get(i, j, k));
-                        chunks.get(key).load();
+                    VectorKey key = new VectorKey(i, j, k);
+                    if (!chunks.containsKey(key)) {
+                        chunks.put(key, null);
+                        int i2 = i;
+                        int j2 = j;
+                        int k2 = k;
+                        threadPool.execute(() -> {
+                            Chunk c = supplier.get(i2, j2, k2);
+                            if (c != null) {
+                                c.pos = new Vector3i(i2, j2, k2);
+                                c.generate();
+                                chunks.put(key, c);
+                                GameLoop.onMainThread(() -> c.create());
+                            }
+                        });
                     }
                 }
             }
         }
+    }
 
-        upperBoundLoaded = new Vector3i(upperX, upperY, upperZ);
-        lowerBoundLoaded = new Vector3i(lowerX, lowerY, lowerZ);
-
-        for (int i = 0; i < RENDER_DISTANCE * 2; ++i) {
-            for (int j = 0; j < RENDER_DISTANCE * 2; ++j) {
-                for (int k = 0; k < RENDER_DISTANCE * 2; ++k) {
-                    int cx = x + i - RENDER_DISTANCE;
-                    int cy = y + j - RENDER_DISTANCE;
-                    int cz = z + k - RENDER_DISTANCE;
-                    chunks.get(new VectorKey(cx, cy, cz)).draw(cx, cy, cz);
-                }
-            }
-        }
+    public static Vector3f chunkToPos(Vector3ic pos) {
+        return new Vector3f(pos.x(), pos.y(), pos.z()).mul(Chunk.SIDE_LENGTH);
     }
 
     public static Vector3i posToChunk(Vector3fc pos) {

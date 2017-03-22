@@ -7,6 +7,10 @@ public abstract class Entity extends Destructible {
 
     private static final List<Entity> ENTITY_LIST = new ArrayList();
 
+    public static void destroyAll() {
+        new ArrayList<>(ENTITY_LIST).forEach(Entity::destroy);
+    }
+
     public static void drawAll() {
         ENTITY_LIST.forEach(Entity::draw);
     }

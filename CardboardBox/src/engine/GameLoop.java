@@ -2,10 +2,18 @@ package engine;
 
 import chunk.Chunk;
 import static engine.Window.window;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
 public class GameLoop {
+
+    private static final Queue<Runnable> TO_RUN = new ConcurrentLinkedQueue();
+
+    public static void onMainThread(Runnable r) {
+        TO_RUN.add(r);
+    }
 
     public static void run() {
         while (!glfwWindowShouldClose(window)) {
@@ -13,6 +21,10 @@ public class GameLoop {
             glfwPollEvents();
 
             Entity.updateAll();
+
+            while (!TO_RUN.isEmpty()) {
+                TO_RUN.poll().run();
+            }
 
             // Clear the color buffer
             glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -27,5 +39,8 @@ public class GameLoop {
 
             glfwSwapBuffers(window);
         }
+
+        Entity.destroyAll();
+        Window.cleanup();
     }
 }

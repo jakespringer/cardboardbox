@@ -9,6 +9,8 @@ import static org.lwjgl.opengl.GL20.*;
 
 public class ShaderProgram implements Activatable {
 
+    private static int activeProgram;
+
     private final int shaderProgram;
 
     /**
@@ -42,12 +44,18 @@ public class ShaderProgram implements Activatable {
 
     @Override
     public void activate() {
-        glUseProgram(shaderProgram);
+        if (activeProgram != shaderProgram) {
+            glUseProgram(shaderProgram);
+            activeProgram = shaderProgram;
+        }
     }
 
     @Override
     public void deactivate() {
-        glUseProgram(0);
+        if (activeProgram != 0) {
+            glUseProgram(0);
+            activeProgram = 0;
+        }
     }
 
     private final HashMap<String, Integer> uniformLocations = new HashMap();

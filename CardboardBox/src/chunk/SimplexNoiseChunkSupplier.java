@@ -1,14 +1,16 @@
 package chunk;
 
-import java.util.HashMap;
+import static chunk.Chunk.SIDE_LENGTH;
+import static chunk.Chunk.SIDE_LENGTH_2;
 import util.Noise;
-import util.VectorKey;
 
 public class SimplexNoiseChunkSupplier implements ChunkSupplier {
 
-    private Noise noise;
-    private HashMap<VectorKey, Chunk> cache = new HashMap<>();
-    private Chunk emptyChunk = new Chunk();
+    private static final int OCTAVES = 4;
+    private static final double FREQUENCY = 1 / 200.;
+    private static final double HEIGHT = 50;
+
+    private final Noise noise;
 
     public SimplexNoiseChunkSupplier(double seed) {
         noise = new Noise(seed);
@@ -20,31 +22,37 @@ public class SimplexNoiseChunkSupplier implements ChunkSupplier {
 
     @Override
     public Chunk get(int x, int y, int z) {
-        VectorKey key = new VectorKey(x, y, z);
-        if (cache.containsKey(key)) {
-            return cache.get(key);
-        } else {
-            Chunk chunk = null;
-            for (int i = 0; i < Chunk.SIDE_LENGTH; ++i) {
-                for (int j = 0; j < Chunk.SIDE_LENGTH; ++j) {
-                    int height = (int) Math.floor((noise.fbm(x * Chunk.SIDE_LENGTH + i, y * Chunk.SIDE_LENGTH + j, 4, 1 / 200.) + 2) * 15);
-//                    int height = (int) Math.floor((noise.perlin((x * Chunk.SIDE_LENGTH - i) / 100.0f, (z * Chunk.SIDE_LENGTH - j) / 100.0f) + 1) * 10);
-                    if ((height / Chunk.SIDE_LENGTH) == z) {
+        if ((z + 1) * SIDE_LENGTH > 2 * HEIGHT || z * SIDE_LENGTH < -2 * HEIGHT) {
+            return null;
+        }
+        Chunk chunk = null;
+        int count = 0;
+        for (int i = -1; i <= SIDE_LENGTH; i++) {
+            for (int j = -1; j <= SIDE_LENGTH; j++) {
+                for (int k = -1; k <= SIDE_LENGTH; k++) {
+                    if (noise.fbm(x * SIDE_LENGTH + i, y * SIDE_LENGTH + j, z * SIDE_LENGTH + k,
+                            OCTAVES, FREQUENCY) * HEIGHT > z * SIDE_LENGTH + k) {
                         if (chunk == null) {
                             chunk = new Chunk();
                         }
-                        for (int k = 0; k <= height % Chunk.SIDE_LENGTH; k++) {
-                            chunk.setColor(i, j, k, 0x00AA00);
-                        }
+
+                        int r = validateColor(50 * noise.fbm(1000 + x * SIDE_LENGTH + i, y * SIDE_LENGTH + j, z * SIDE_LENGTH + k, 2, 1 / 200.));
+                        int g = validateColor(200 + 50 * noise.fbm(2000 + x * SIDE_LENGTH + i, y * SIDE_LENGTH + j, z * SIDE_LENGTH + k, 2, 1 / 200.));
+                        int b = validateColor(50 * noise.fbm(3000 + x * SIDE_LENGTH + i, y * SIDE_LENGTH + j, z * SIDE_LENGTH + k, 2, 1 / 200.));
+
+                        chunk.setColor(i, j, k, 0x10000 * r + 0x100 * g + b);
+                        count++;
                     }
                 }
             }
-
-            if (chunk == null) {
-                chunk = emptyChunk;
-            }
-            cache.put(key, chunk);
-            return chunk;
         }
+        if (count == 0 || count == SIDE_LENGTH_2 * SIDE_LENGTH_2 * SIDE_LENGTH_2) {
+            return null;
+        }
+        return chunk;
+    }
+
+    private static int validateColor(double x) {
+        return (int) Math.min(Math.max(0, x), 255);
     }
 }

@@ -48,7 +48,7 @@ public class Main {
                 if (glfwGetKey(window, GLFW_KEY_ESCAPE) != 0) {
                     glfwSetWindowShouldClose(window, true);
                 }
-                float cameraSpeed = 0.8f;
+                float cameraSpeed = 5f;
                 if (glfwGetKey(window, GLFW_KEY_W) != 0) {
                     Vector3fc forward = camera.facing();
                     Vector3f horizontalForward = forward.mul(cameraSpeed, new Vector3f());
@@ -85,5 +85,7 @@ public class Main {
         }.create();
 
         GameLoop.run();
+
+        System.exit(0);
     }
 }
