@@ -19,7 +19,7 @@ import util.VectorKey;
 
 public class World extends Entity {
 
-    public static final int LOAD_DISTANCE = 6;
+    public static final int LOAD_DISTANCE = 4;
     public static final int UNLOAD_DISTANCE = 30;
 
     public static final int NUM_THREADS = 6;

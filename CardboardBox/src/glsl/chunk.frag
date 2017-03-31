@@ -7,7 +7,7 @@ out vec4 color;
 uniform sampler2D texture_sampler;
 uniform vec3 normal;
 
-const int SIDE_LENGTH = 32;
+const int SIDE_LENGTH = 64;
 
 void main() {
     vec3 pos = floor(blockPos - .5 * normal);

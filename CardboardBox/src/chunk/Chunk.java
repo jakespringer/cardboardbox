@@ -22,7 +22,7 @@ public class Chunk extends Entity {
 
     // -------------------------------------------------------------------------------------------------------
     // Storing block colors
-    public static final int SIDE_LENGTH = 32;
+    public static final int SIDE_LENGTH = 64;
     static final int SIDE_LENGTH_2 = (SIDE_LENGTH + 2);
 
     public Vector3i pos;

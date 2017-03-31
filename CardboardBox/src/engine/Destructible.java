@@ -13,8 +13,10 @@ public abstract class Destructible {
     private final Set<Destructible> children = new HashSet<>();
 
     public Destructible() {
-        if (!STACK.isEmpty()) {
-            setParent(STACK.peek());
+        synchronized (STACK) {
+            if (!STACK.isEmpty()) {
+                setParent(STACK.peek());
+            }
         }
     }
 
