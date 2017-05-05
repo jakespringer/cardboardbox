@@ -13,44 +13,19 @@ import static org.lwjgl.glfw.GLFW.glfwPollEvents;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose;
 import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
-import static org.lwjgl.opengl.GL11.GL_BLEND;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
-import static org.lwjgl.opengl.GL11.GL_FILL;
-import static org.lwjgl.opengl.GL11.GL_FLOAT;
-import static org.lwjgl.opengl.GL11.GL_FRONT_AND_BACK;
 import static org.lwjgl.opengl.GL11.GL_LESS;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
-import static org.lwjgl.opengl.GL11.glBlendFunc;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glClearColor;
 import static org.lwjgl.opengl.GL11.glDepthFunc;
-import static org.lwjgl.opengl.GL11.glDrawArrays;
 import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glPolygonMode;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
-import chunk.Chunk;
-import chunk.ChunkRenderer;
-import opengl.BufferObject;
-import opengl.BufferObject.BufferObjectResource;
-import opengl.BufferObject.Target;
-import opengl.BufferObject.UsageHint;
-import opengl.ShaderProgram;
-import opengl.ShaderProgram.ShaderProgramResource;
-import opengl.TextureObject;
-import opengl.TextureObject.TextureObjectResource;
-import opengl.VertexArrayObject;
-import opengl.VertexArrayObject.VertexArrayObjectResource;
-import util.Resources;
+import chunk.World;
 
 public class GameLoop {
 	private static long currentNanoTime;
@@ -62,85 +37,21 @@ public class GameLoop {
 	private static double xCursorPrevious;
 	private static double yCursorPrevious;
 	
+	private static World world;
+	
 	public static void run() {
-		// for debugging
-				
+		world = new World();
+		
+		Thread computeThread = new Thread(GameLoop::computeThreadRun);
+		computeThread.setDaemon(true);
+		computeThread.start();
+		mainThreadRun();
+	}
+	
+	public static void mainThreadRun() {
 		glfwGetCursorPos(Window.getWindowHandle(), xBuffer, yBuffer);
 		xCursorPrevious = xBuffer[0];
 		yCursorPrevious = yBuffer[0];
-		
-		VertexArrayObject vao = new VertexArrayObject();
-		BufferObject vbo = new BufferObject(Target.ARRAY_BUFFER, UsageHint.STATIC_DRAW, new float[] {
-				-1.0f,-1.0f,-1.0f,
-			    -1.0f,-1.0f, 1.0f,
-			    -1.0f, 1.0f, 1.0f,
-			    1.0f, 1.0f,-1.0f,
-			    -1.0f,-1.0f,-1.0f,
-			    -1.0f, 1.0f,-1.0f,
-			    1.0f,-1.0f, 1.0f,
-			    -1.0f,-1.0f,-1.0f,
-			    1.0f,-1.0f,-1.0f,
-			    1.0f, 1.0f,-1.0f,
-			    1.0f,-1.0f,-1.0f,
-			    -1.0f,-1.0f,-1.0f,
-			    -1.0f,-1.0f,-1.0f,
-			    -1.0f, 1.0f, 1.0f,
-			    -1.0f, 1.0f,-1.0f,
-			    1.0f,-1.0f, 1.0f,
-			    -1.0f,-1.0f, 1.0f,
-			    -1.0f,-1.0f,-1.0f,
-			    -1.0f, 1.0f, 1.0f,
-			    -1.0f,-1.0f, 1.0f,
-			    1.0f,-1.0f, 1.0f,
-			    1.0f, 1.0f, 1.0f,
-			    1.0f,-1.0f,-1.0f,
-			    1.0f, 1.0f,-1.0f,
-			    1.0f,-1.0f,-1.0f,
-			    1.0f, 1.0f, 1.0f,
-			    1.0f,-1.0f, 1.0f,
-			    1.0f, 1.0f, 1.0f,
-			    1.0f, 1.0f,-1.0f,
-			    -1.0f, 1.0f,-1.0f,
-			    1.0f, 1.0f, 1.0f,
-			    -1.0f, 1.0f,-1.0f,
-			    -1.0f, 1.0f, 1.0f,
-			    1.0f, 1.0f, 1.0f,
-			    -1.0f, 1.0f, 1.0f,
-			    1.0f,-1.0f, 1.0f
-		});
-		BufferObject ebo = new BufferObject(Target.ELEMENT_ARRAY_BUFFER, UsageHint.STATIC_DRAW, new int[] {
-				1, 2, 3,
-				1, 2, 3,
-		});
-		TextureObject to = new TextureObject(TextureObject.Target.TEXTURE_2D, new float[] {
-				1.0f, 0.0f, 0.0f,
-				0.0f, 1.0f, 0.0f
-		}, 1, 2);
-		ShaderProgram program = new ShaderProgram(Resources.get("glsl/simple.vert"), Resources.get("glsl/simple.frag"));
-		
-		try (VertexArrayObjectResource vaor = vao.use();
-			 BufferObjectResource bor = vbo.use()) {
-	    	glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * 4, 0);
-	        glEnableVertexAttribArray(0);
-		}
-		
-		int[] chunkColors = new int[287496];
-		for (int i=0; i<chunkColors.length; ++i) {
-			double rand = Math.random();
-			double threshold = 0.995;
-			if (rand > threshold) {
-//				chunkColors[i] = (int) ((rand - threshold) * (1.0 / (1.0 - threshold)) * (0x00FFFFFF));
-				int split = 287496 / 3;
-				if (i < split*1) chunkColors[i] = 0x00FF0000;
-				else if (i < split*2) chunkColors[i] = 0x000000FF;
-				else chunkColors[i] = 0x0000FF00;
-			} else {
-				chunkColors[i] = 0;
-			}
-		}
-		
-		Chunk chunk = new Chunk(chunkColors);
-		ChunkRenderer chunkRenderer = new ChunkRenderer(chunk);
 		
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
@@ -160,50 +71,20 @@ public class GameLoop {
             
             updateCameraPosition();
             
-//            try (VertexArrayObjectResource vaor = vao.use();
-//            	 ShaderProgramResource spr = program.use();
-//                 BufferObjectResource bor = ebo.use();
-//                 TextureObjectResource tor = to.use()) {
-//            	
-//            	spr.setUniform("projectionMatrix", Camera.getProjectionMatrix(1.f, Window.getWidth(), Window.getHeight(), 0.1f, 100.f));
-//            	spr.setUniform("modelViewMatrix", Scene.getCamera().getModelViewMatrix(new Vector3f(1, 1, -5)));
-//            	
-//            	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-////            	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-//            	glDrawArrays(GL_TRIANGLES, 0, 35*3);
-//            }
+            world.update();
+            world.render();
             
-            chunkRenderer.render();
-
             glfwSwapBuffers(handle);
         }
-		
-		vbo.destroy();
-		ebo.destroy();
-		vao.destroy();
-		chunkRenderer.destroy();
-		
+				
 		Window.cleanup();
 	}
 	
-	public static void _run() {
-		previousNanoTime = System.nanoTime();
+	public static void computeThreadRun() {
 		long handle = Window.getWindowHandle();
 		while (!glfwWindowShouldClose(handle)) {
-			currentNanoTime = System.nanoTime();
-			deltaNanoTime = currentNanoTime - previousNanoTime;
-			dt = (double) deltaNanoTime / 1e9;
-			previousNanoTime = currentNanoTime;
-			Window.updateFps(1 / dt);
-			
-            glfwPollEvents();
-            glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
-
-            glfwSwapBuffers(handle);
-        }
-		
-		Window.cleanup();
+			world.compute();
+		}
 	}
 	
 	public static void updateCameraPosition() {
@@ -211,7 +92,7 @@ public class GameLoop {
 		if (glfwGetKey(Window.getWindowHandle(), GLFW_KEY_ESCAPE) != 0) {
             glfwSetWindowShouldClose(Window.getWindowHandle(), true);
         }
-        float cameraSpeed = (float) (5.0 * dt);
+        float cameraSpeed = (float) (200.0 * dt);
         if (glfwGetKey(Window.getWindowHandle(), GLFW_KEY_W) != 0) {
             Vector3fc forward = camera.facing();
             Vector3f horizontalForward = forward.mul(cameraSpeed, new Vector3f());

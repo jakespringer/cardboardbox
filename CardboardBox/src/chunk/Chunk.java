@@ -7,7 +7,7 @@ import java.util.List;
 import org.joml.Vector3i;
 
 public class Chunk {
-	private static final int SIDE_LENGTH = 64;
+	public static final int SIDE_LENGTH = 64;
 	private static final int SIDE_LENGTH_PADDED_2 = SIDE_LENGTH + 2;
 	private static final Vector3i VEC_XY_FRONT = new Vector3i(0, 0, 1);
 	private static final Vector3i VEC_XY_BACK = new Vector3i(0, 0, -1);
@@ -49,13 +49,13 @@ public class Chunk {
     	return isSolid(vec.x, vec.y, vec.z);
     }
 
-    private void setColor(int x, int y, int z, int color) {
-        colors[(x + 1) * SIDE_LENGTH_PADDED_2 * SIDE_LENGTH_PADDED_2 + (y + 1) * SIDE_LENGTH_PADDED_2 + (z + 1)] = color;
-    }
-    
-    private void setColor(Vector3i vec, int color) {
-    	setColor(vec.x, vec.y, vec.z, color);
-    }
+//    private void setColor(int x, int y, int z, int color) {
+//        colors[(x + 1) * SIDE_LENGTH_PADDED_2 * SIDE_LENGTH_PADDED_2 + (y + 1) * SIDE_LENGTH_PADDED_2 + (z + 1)] = color;
+//    }
+//    
+//    private void setColor(Vector3i vec, int color) {
+//    	setColor(vec.x, vec.y, vec.z, color);
+//    }
     
     public List<Vector3i> getXyQuadVertices() {
     	return Collections.unmodifiableList(xyQuadVertices);

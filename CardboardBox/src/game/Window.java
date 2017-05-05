@@ -49,7 +49,7 @@ public class Window {
 	private static String title = "CardboardBox, fps={fps}";
 	
 	private static final DecimalFormat fpsFormat = new DecimalFormat("#.0"); 
-	private static final double[] fpsHistory = new double[32];
+	private static final double[] fpsHistory = new double[8];
 	private static int fpsHistoryIndex = 0;
 	
 	public static void initialize() {

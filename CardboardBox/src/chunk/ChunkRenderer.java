@@ -52,7 +52,6 @@ public class ChunkRenderer {
 	private static BufferObject xyxzyzQuadVerticesBufferObject;
 	private static ShaderProgram chunkProgram;
 	
-	private Chunk chunk;
 	private VertexArrayObject xyVao;
 	private VertexArrayObject xzVao;
 	private VertexArrayObject yzVao;
@@ -76,9 +75,7 @@ public class ChunkRenderer {
 			xyxzyzQuadVerticesBufferObject = new BufferObject(BufferObject.Target.ARRAY_BUFFER, BufferObject.UsageHint.STATIC_DRAW, XYXZYZ_QUAD_VERTICES);
 			chunkProgram = new ShaderProgram(Resources.get("glsl/chunk.vert"), Resources.get("glsl/chunk.frag"));
 		}
-		
-		this.chunk = chunk;
-		
+				
 		List<Vector3i> xyVerts = chunk.getXyQuadVertices();
 		List<Integer> xyColors = chunk.getXyQuadColors();
 		float[] xyData = new float[xyVerts.size()*3];
@@ -134,7 +131,7 @@ public class ChunkRenderer {
 		quadCounts = new int[] { xyQuadsCount, xzQuadsCount, yzQuadsCount };
 	}
 	
-	public void render() {
+	public void render(Vector3f translation) {
 		for (int i=0; i<3; ++i) {
 			VertexArrayObject vao = vaos[i];
 			BufferObject vbo = vbos[i];
@@ -144,7 +141,7 @@ public class ChunkRenderer {
 			try (VertexArrayObjectResource vaor = vao.use();
 				 ShaderProgramResource spr = chunkProgram.use()) {
 								
-				spr.setUniform("viewMatrix", Scene.getCamera().getModelViewMatrix(new Vector3f(-32, -32, -32)));
+				spr.setUniform("viewMatrix", Scene.getCamera().getModelViewMatrix(translation));
 				spr.setUniform("projectionMatrix", Camera.getProjectionMatrix(1.0f, (float) Window.getWidth(), (float) Window.getHeight(), 0.1f, 100.0f));
 								
 				glEnableVertexAttribArray(0);
