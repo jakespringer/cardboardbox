@@ -1,43 +1,43 @@
 package opengl;
 
+import static org.lwjgl.opengl.GL30.glBindVertexArray;
+import static org.lwjgl.opengl.GL30.glDeleteVertexArrays;
+import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 
-import engine.Activatable;
-import engine.Destructible;
-import static org.lwjgl.opengl.ARBVertexArrayObject.*;
-
-public class VertexArrayObject extends Destructible implements Activatable {
-
-    private final int VAO;
-
-    public static VertexArrayObject createVAO(Runnable r) {
-        VertexArrayObject VAO = new VertexArrayObject() {
-            @Override
-            public void createInner() {
-                activate();
-                r.run();
-                deactivate();
-            }
-        };
-        VAO.create();
-        return VAO;
-    }
-
-    private VertexArrayObject() {
-        VAO = glGenVertexArrays();
-    }
-
-    @Override
-    public void activate() {
-        glBindVertexArray(VAO);
-    }
-
-    @Override
-    public void deactivate() {
-        glBindVertexArray(0);
-    }
-
-    @Override
-    protected void destroyInner() {
-        glDeleteVertexArrays(VAO);
-    }
+public class VertexArrayObject {
+	private int vertexArrayObjectHandle;
+	
+	public VertexArrayObject() {
+		vertexArrayObjectHandle = glGenVertexArrays();
+	}
+	
+	public void bind() {
+		glBindVertexArray(vertexArrayObjectHandle);
+	}
+	
+	public void unbind() {
+		glBindVertexArray(0);
+	}
+	
+	public void destroy() {
+		glDeleteVertexArrays(vertexArrayObjectHandle);
+	}
+	
+	public VertexArrayObjectResource use() {
+		return new VertexArrayObjectResource(this);
+	}
+	
+	public static class VertexArrayObjectResource implements AutoCloseable {
+		private VertexArrayObject obj;
+		
+		private VertexArrayObjectResource(VertexArrayObject obj) {
+			this.obj = obj;
+			obj.bind();
+		}
+		
+		@Override
+		public void close() {
+			obj.unbind();
+		}
+	}
 }
