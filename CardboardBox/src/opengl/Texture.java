@@ -102,7 +102,7 @@ public class Texture extends Destructible implements Activatable {
         for (int x = 0; x < SIDE_LENGTH; x++) {
             for (int y = 0; y < SIDE_LENGTH; y++) {
                 for (int z = 0; z < SIDE_LENGTH; z++) {
-                    int col = chunk.getColor(x, y, z);
+                    int col = chunk.colors.get(x, y, z);
                     if (col != 0) {
                         for (int j = 2; j >= 0; j--) {
                             colors[3 * (x * SIDE_LENGTH * SIDE_LENGTH + y * SIDE_LENGTH + z) + j] = (col % 256) / 255.0f;

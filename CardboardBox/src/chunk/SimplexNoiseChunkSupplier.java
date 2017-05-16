@@ -10,6 +10,8 @@ public class SimplexNoiseChunkSupplier implements ChunkSupplier {
     private static final double FREQUENCY = 1 / 500.;
     private static final double HEIGHT = 100;
 
+    public static final double MAX_Z = 2. * HEIGHT / SIDE_LENGTH;
+
     private final Noise noise;
 
     public SimplexNoiseChunkSupplier(double seed) {
@@ -21,8 +23,8 @@ public class SimplexNoiseChunkSupplier implements ChunkSupplier {
     }
 
     @Override
-    public Chunk get(int x, int y, int z) {
-        if ((z + 1) * SIDE_LENGTH > 2 * HEIGHT || z * SIDE_LENGTH < -2 * HEIGHT) {
+    public BlockArray get(int x, int y, int z) {
+        if (z + 1 > MAX_Z || z < -MAX_Z) {
             return null;
         }
 
@@ -30,34 +32,25 @@ public class SimplexNoiseChunkSupplier implements ChunkSupplier {
         int colorDownsampling = 8;
 
         double[][][] blocks = fbmDownsample(noise, x, y, z, OCTAVES, FREQUENCY, blockDownsampling);
-        double[][][] red = fbmDownsample(noise, 1000 + x, y, z, 2, 1 / 200., colorDownsampling);
-        double[][][] green = fbmDownsample(noise, 2000 + x, y, z, 2, 1 / 200., colorDownsampling);
-        double[][][] blue = fbmDownsample(noise, 3000 + x, y, z, 2, 1 / 200., colorDownsampling);
+        double[][][] red = fbmDownsample(noise, 1000 + x, y, z, 2, 1 / 1000., colorDownsampling);
+        double[][][] green = fbmDownsample(noise, 2000 + x, y, z, 2, 1 / 1000., colorDownsampling);
+        double[][][] blue = fbmDownsample(noise, 3000 + x, y, z, 2, 1 / 1000., colorDownsampling);
 
-//        int downSampling = 2;
-//        double[][][] noiseSamples = new double[SIDE_LENGTH / downSampling + 2][SIDE_LENGTH / downSampling + 2][SIDE_LENGTH / downSampling + 2];
-//        for (int i = -1; i <= SIDE_LENGTH / downSampling; i++) {
-//            for (int j = -1; j <= SIDE_LENGTH / downSampling; j++) {
-//                for (int k = -1; k <= SIDE_LENGTH / downSampling; k++) {
-//                    noiseSamples[i + 1][j + 1][k + 1] = noise.fbm(x * SIDE_LENGTH + i * downSampling, y * SIDE_LENGTH + j * downSampling, z * SIDE_LENGTH + k * downSampling, OCTAVES, FREQUENCY) * HEIGHT;
-//                }
-//            }
-//        }
-        Chunk chunk = null;
+        BlockArray ba = null;
         int count = 0;
         for (int i = -1; i <= SIDE_LENGTH; i++) {
             for (int j = -1; j <= SIDE_LENGTH; j++) {
                 for (int k = -1; k <= SIDE_LENGTH; k++) {
                     if (sample(blocks, i, j, k, blockDownsampling) * HEIGHT > z * SIDE_LENGTH + k) {
-                        if (chunk == null) {
-                            chunk = new Chunk();
+                        if (ba == null) {
+                            ba = new BlockArray();
                         }
 
-                        int r = validateColor(50 * sample(red, i, j, k, colorDownsampling));
-                        int g = validateColor(200 + 50 * sample(green, i, j, k, colorDownsampling));
-                        int b = validateColor(50 * sample(blue, i, j, k, colorDownsampling));
+                        int r = validateColor(100 * sample(red, i, j, k, colorDownsampling));
+                        int g = validateColor(150 + 100 * sample(green, i, j, k, colorDownsampling));
+                        int b = validateColor(100 * sample(blue, i, j, k, colorDownsampling));
 
-                        chunk.setColor(i, j, k, 0x10000 * r + 0x100 * g + b);
+                        ba.setColor(i, j, k, 0x10000 * r + 0x100 * g + b);
                         count++;
                     }
                 }
@@ -66,7 +59,7 @@ public class SimplexNoiseChunkSupplier implements ChunkSupplier {
         if (count == 0 || count == SIDE_LENGTH_2 * SIDE_LENGTH_2 * SIDE_LENGTH_2) {
             return null;
         }
-        return chunk;
+        return ba;
     }
 
     private static double[][][] fbmDownsample(Noise noise, int x, int y, int z, int octaves, double frequency, int downSampling) {

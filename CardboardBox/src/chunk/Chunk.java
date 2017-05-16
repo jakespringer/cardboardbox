@@ -22,36 +22,26 @@ public class Chunk extends Entity {
 
     // -------------------------------------------------------------------------------------------------------
     // Storing block colors
-    public static final int SIDE_LENGTH = 64;
+    public static final int SIDE_LENGTH = 32;
     static final int SIDE_LENGTH_2 = (SIDE_LENGTH + 2);
 
     public Vector3i pos;
-    private int[] colors = new int[SIDE_LENGTH_2 * SIDE_LENGTH_2 * SIDE_LENGTH_2];
-
-    public int getColor(int x, int y, int z) {
-        return colors[(x + 1) * SIDE_LENGTH_2 * SIDE_LENGTH_2 + (y + 1) * SIDE_LENGTH_2 + (z + 1)];
-    }
-
-    boolean isSolid(int x, int y, int z) {
-        return getColor(x, y, z) != 0;
-    }
-
-    void setColor(int x, int y, int z, int color) {
-        colors[(x + 1) * SIDE_LENGTH_2 * SIDE_LENGTH_2 + (y + 1) * SIDE_LENGTH_2 + (z + 1)] = color;
-    }
+    public OctTree colors;
 
     // -------------------------------------------------------------------------------------------------------
     // Loading the chunk
     private final List<int[]> vertices = new LinkedList(), indices = new LinkedList();
 
-    public void generate() {
+    public void generate(BlockArray a) {
+        colors = new OctTree(a);
+
         for (Vector3i dir : allDirs) {
             List<Vector3i> verts = new ArrayList();
             for (int x = 0; x < SIDE_LENGTH; x++) {
                 for (int y = 0; y < SIDE_LENGTH; y++) {
                     for (int z = 0; z < SIDE_LENGTH; z++) {
-                        if (isSolid(x, y, z)) {
-                            if (!isSolid(x + dir.x, y + dir.y, z + dir.z)) {
+                        if (a.isSolid(x, y, z)) {
+                            if (!a.isSolid(x + dir.x, y + dir.y, z + dir.z)) {
                                 for (int c = 0; c < 8; c++) {
                                     Vector3i toAdd = new Vector3i(c % 2, c / 2 % 2, c / 4);
                                     if ((toAdd.x - .5) * dir.x + (toAdd.y - .5) * dir.y + (toAdd.z - .5) * dir.z > 0) {
@@ -115,6 +105,8 @@ public class Chunk extends Entity {
                             glEnableVertexAttribArray(0);
                         }));
                     }
+                    vertices.clear();
+                    indices.clear();
                 }
                 t = new Texture(this);
             }

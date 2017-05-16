@@ -1,11 +1,13 @@
 package game;
 
+import chunk.BlockArray;
 import chunk.Chunk;
 import chunk.ChunkSupplier;
+import static chunk.SimplexNoiseChunkSupplier.MAX_Z;
 import engine.Entity;
 import engine.GameLoop;
 import engine.Window;
-import java.util.HashMap;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +21,7 @@ import util.VectorKey;
 
 public class World extends Entity {
 
-    public static final int LOAD_DISTANCE = 4;
+    public static final int LOAD_DISTANCE = 8;
     public static final int UNLOAD_DISTANCE = 30;
 
     public static final int NUM_THREADS = 6;
@@ -60,27 +62,35 @@ public class World extends Entity {
         int lowerY = y - LOAD_DISTANCE;
         int lowerZ = z - LOAD_DISTANCE;
 
+        List<Vector3i> toLoad = new ArrayList();
+
         for (int i = lowerX; i < upperX; ++i) {
             for (int j = lowerY; j < upperY; ++j) {
-                for (int k = lowerZ; k < upperZ; ++k) {
+                for (int k = (int) Math.max(lowerZ, -MAX_Z); k < upperZ && k < MAX_Z - 1; ++k) {
+//                    if (k + 1 > MAX_Z || k < -MAX_Z) {
+//                        break;
+//                    }
                     VectorKey key = new VectorKey(i, j, k);
                     if (!chunks.containsKey(key)) {
+                        toLoad.add(new Vector3i(i, j, k));
                         chunks.put(key, null);
-                        int i2 = i;
-                        int j2 = j;
-                        int k2 = k;
-                        threadPool.execute(() -> {
-                            Chunk c = supplier.get(i2, j2, k2);
-                            if (c != null) {
-                                c.pos = new Vector3i(i2, j2, k2);
-                                c.generate();
-                                chunks.put(key, c);
-                                GameLoop.onMainThread(() -> c.create());
-                            }
-                        });
                     }
                 }
             }
+        }
+        Collections.sort(toLoad, Comparator.comparingDouble(homeChunk::distance));
+
+        for (Vector3i v : toLoad) {
+            threadPool.execute(() -> {
+                BlockArray b = supplier.get(v.x, v.y, v.z);
+                if (b != null) {
+                    Chunk c = new Chunk();
+                    c.pos = v;
+                    c.generate(b);
+                    chunks.put(new VectorKey(v.x, v.y, v.z), c);
+                    GameLoop.onMainThread(() -> c.create());
+                }
+            });
         }
     }
 

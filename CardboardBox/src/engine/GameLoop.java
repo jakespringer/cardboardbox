@@ -2,8 +2,10 @@ package engine;
 
 import chunk.Chunk;
 import static engine.Window.window;
+import java.util.Arrays;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import org.lwjgl.glfw.GLFW;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -15,8 +17,18 @@ public class GameLoop {
         TO_RUN.add(r);
     }
 
+    private static long prevTime;
+    private static final double[] fpsHistory = new double[16];
+    private static int fpsHistoryIndex = 0;
+
     public static void run() {
         while (!glfwWindowShouldClose(window)) {
+
+            //FPS
+            fpsHistory[fpsHistoryIndex] = 1.0e9 / (System.nanoTime() - prevTime);
+            GLFW.glfwSetWindowTitle(Window.window, "" + (int) Arrays.stream(fpsHistory).average().getAsDouble());
+            fpsHistoryIndex = (fpsHistoryIndex + 1) % fpsHistory.length;
+            prevTime = System.nanoTime();
 
             glfwPollEvents();
 
@@ -27,7 +39,7 @@ public class GameLoop {
             }
 
             // Clear the color buffer
-            glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+            glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
             if (Chunk.shaderProgram != null) {
