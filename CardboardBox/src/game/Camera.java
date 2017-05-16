@@ -15,6 +15,12 @@ public class Camera {
                 .rotate(horAngle, new Vector3f(0, 1, 0))
                 .translate(position);
     }
+    
+    public Matrix4f getRotationalViewMatrix() {
+    	return new Matrix4f()
+    			.rotate(vertAngle, new Vector3f(1, 0, 0))
+                .rotate(horAngle, new Vector3f(0, 1, 0));
+    }
 
     public Matrix4f getModelViewMatrix(Vector3f translate) {
         return getViewMatrix().translate(translate);

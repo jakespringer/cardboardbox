@@ -8,7 +8,7 @@ import org.joml.Vector3i;
 
 public class Chunk {
 	public static final int SIDE_LENGTH = 64;
-	private static final int SIDE_LENGTH_PADDED_2 = SIDE_LENGTH + 2;
+	public static final int SIDE_LENGTH_PADDED_2 = SIDE_LENGTH + 2;
 	private static final Vector3i VEC_XY_FRONT = new Vector3i(0, 0, 1);
 	private static final Vector3i VEC_XY_BACK = new Vector3i(0, 0, -1);
 	private static final Vector3i VEC_XZ_FRONT = new Vector3i(0, -1, 0);
@@ -17,12 +17,18 @@ public class Chunk {
 	private static final Vector3i VEC_YZ_BACK = new Vector3i(1, 0, 0);
 	
 	private int[] colors = new int[SIDE_LENGTH_PADDED_2 * SIDE_LENGTH_PADDED_2 * SIDE_LENGTH_PADDED_2];
-	private List<Vector3i> xyQuadVertices = new ArrayList<>();
-	private List<Vector3i> xzQuadVertices = new ArrayList<>();
-	private List<Vector3i> yzQuadVertices = new ArrayList<>();
-	private List<Integer> xyQuadColors = new ArrayList<>();
-	private List<Integer> xzQuadColors = new ArrayList<>();
-	private List<Integer> yzQuadColors = new ArrayList<>();
+	private List<Vector3i> xyFrontQuadVertices = new ArrayList<>();
+	private List<Vector3i> xzFrontQuadVertices = new ArrayList<>();
+	private List<Vector3i> yzFrontQuadVertices = new ArrayList<>();
+	private List<Vector3i> xyBackQuadVertices = new ArrayList<>();
+	private List<Vector3i> xzBackQuadVertices = new ArrayList<>();
+	private List<Vector3i> yzBackQuadVertices = new ArrayList<>();
+	private List<Integer> xyFrontQuadColors = new ArrayList<>();
+	private List<Integer> xzFrontQuadColors = new ArrayList<>();
+	private List<Integer> yzFrontQuadColors = new ArrayList<>();
+	private List<Integer> xyBackQuadColors = new ArrayList<>();
+	private List<Integer> xzBackQuadColors = new ArrayList<>();
+	private List<Integer> yzBackQuadColors = new ArrayList<>();
 	
 	public Chunk(int[] colors) {
 		if (colors.length != this.colors.length) {
@@ -57,28 +63,52 @@ public class Chunk {
 //    	setColor(vec.x, vec.y, vec.z, color);
 //    }
     
-    public List<Vector3i> getXyQuadVertices() {
-    	return Collections.unmodifiableList(xyQuadVertices);
+    public List<Vector3i> getXyFrontQuadVertices() {
+    	return Collections.unmodifiableList(xyFrontQuadVertices);
     }
     
-    public List<Vector3i> getXzQuadVertices() {
-    	return Collections.unmodifiableList(xzQuadVertices);
+    public List<Vector3i> getXzFrontQuadVertices() {
+    	return Collections.unmodifiableList(xzFrontQuadVertices);
     }
     
-    public List<Vector3i> getYzQuadVertices() {
-    	return Collections.unmodifiableList(yzQuadVertices);
+    public List<Vector3i> getYzFrontQuadVertices() {
+    	return Collections.unmodifiableList(yzFrontQuadVertices);
     }
     
-    public List<Integer> getXyQuadColors() {
-    	return Collections.unmodifiableList(xyQuadColors);
+    public List<Integer> getXyFrontQuadColors() {
+    	return Collections.unmodifiableList(xyFrontQuadColors);
     }
     
-    public List<Integer> getXzQuadColors() {
-    	return Collections.unmodifiableList(xzQuadColors);
+    public List<Integer> getXzFrontQuadColors() {
+    	return Collections.unmodifiableList(xzFrontQuadColors);
     }
     
-    public List<Integer> getYzQuadColors() {
-    	return Collections.unmodifiableList(yzQuadColors);
+    public List<Integer> getYzFrontQuadColors() {
+    	return Collections.unmodifiableList(yzFrontQuadColors);
+    }
+    
+    public List<Vector3i> getXyBackQuadVertices() {
+    	return Collections.unmodifiableList(xyBackQuadVertices);
+    }
+    
+    public List<Vector3i> getXzBackQuadVertices() {
+    	return Collections.unmodifiableList(xzBackQuadVertices);
+    }
+    
+    public List<Vector3i> getYzBackQuadVertices() {
+    	return Collections.unmodifiableList(yzBackQuadVertices);
+    }
+    
+    public List<Integer> getXyBackQuadColors() {
+    	return Collections.unmodifiableList(xyBackQuadColors);
+    }
+    
+    public List<Integer> getXzBackQuadColors() {
+    	return Collections.unmodifiableList(xzBackQuadColors);
+    }
+    
+    public List<Integer> getYzBackQuadColors() {
+    	return Collections.unmodifiableList(yzBackQuadColors);
     }
     
     private void computeVertices() {
@@ -89,33 +119,33 @@ public class Chunk {
 				for (cur.z=0; cur.z<SIDE_LENGTH; cur.add(0, 0, 1)) {
 	    			if (isSolid(cur)) {
 	    				if (!isSolid(cur.add(VEC_XY_FRONT, buf))) {
-	    					xyQuadVertices.add(cur.add(0, 0, 1, new Vector3i()));
-	    					xyQuadColors.add(getColor(cur));
+	    					xyFrontQuadVertices.add(cur.add(0, 0, 1, new Vector3i()));
+	    					xyFrontQuadColors.add(getColor(cur));
 	    				}
 	    				
 	    				if (!isSolid(cur.add(VEC_XY_BACK, buf))) {
-	    					xyQuadVertices.add(cur.add(0, 0, 0, new Vector3i()));
-	    					xyQuadColors.add(getColor(cur));
+	    					xyBackQuadVertices.add(cur.add(0, 0, 0, new Vector3i()));
+	    					xyBackQuadColors.add(getColor(cur));
 	    				}
 	    				
 	    				if (!isSolid(cur.add(VEC_XZ_FRONT, buf))) {
-	    					xzQuadVertices.add(cur.add(0, 0, 0, new Vector3i()));
-	    					xzQuadColors.add(getColor(cur));
+	    					xzFrontQuadVertices.add(cur.add(0, 0, 0, new Vector3i()));
+	    					xzFrontQuadColors.add(getColor(cur));
 	    				}
 	    				
 	    				if (!isSolid(cur.add(VEC_XZ_BACK, buf))) {
-	    					xzQuadVertices.add(cur.add(0, 1, 0, new Vector3i()));
-	    					xzQuadColors.add(getColor(cur));
+	    					xzBackQuadVertices.add(cur.add(0, 1, 0, new Vector3i()));
+	    					xzBackQuadColors.add(getColor(cur));
 	    				}
 	    				
 	    				if (!isSolid(cur.add(VEC_YZ_FRONT, buf))) {
-	    					yzQuadVertices.add(cur.add(0, 0, 0, new Vector3i()));
-	    					yzQuadColors.add(getColor(cur));
+	    					yzFrontQuadVertices.add(cur.add(0, 0, 0, new Vector3i()));
+	    					yzFrontQuadColors.add(getColor(cur));
 	    				}
 	    				
 	    				if (!isSolid(cur.add(VEC_YZ_BACK, buf))) {
-	    					yzQuadVertices.add(cur.add(1, 0, 0, new Vector3i()));
-	    					yzQuadColors.add(getColor(cur));
+	    					yzBackQuadVertices.add(cur.add(1, 0, 0, new Vector3i()));
+	    					yzBackQuadColors.add(getColor(cur));
 	    				}
 	    			}
 	    		}

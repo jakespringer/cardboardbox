@@ -16,16 +16,36 @@ import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
+import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL11.GL_LESS;
+import static org.lwjgl.opengl.GL11.GL_TRIANGLE_STRIP;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glClearColor;
 import static org.lwjgl.opengl.GL11.glDepthFunc;
+import static org.lwjgl.opengl.GL11.glDrawArrays;
 import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL20.glDisableVertexAttribArray;
+import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
+import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
+import org.lwjgl.glfw.GLFW;
 
+import chunk.SimplexNoiseChunkSupplier;
 import chunk.World;
+import entity.SimpleEntity;
+import opengl.BufferObject;
+import opengl.BufferObject.BufferObjectResource;
+import opengl.BufferObject.Target;
+import opengl.BufferObject.UsageHint;
+import opengl.ShaderProgram;
+import opengl.ShaderProgram.ShaderProgramResource;
+import opengl.TextureObject;
+import opengl.TextureObject.TextureObjectResource;
+import opengl.VertexArrayObject;
+import opengl.VertexArrayObject.VertexArrayObjectResource;
+import util.Resources;
 
 public class GameLoop {
 	private static long currentNanoTime;
@@ -40,7 +60,7 @@ public class GameLoop {
 	private static World world;
 	
 	public static void run() {
-		world = new World();
+		world = new World(new SimplexNoiseChunkSupplier());
 		
 		Thread computeThread = new Thread(GameLoop::computeThreadRun);
 		computeThread.setDaemon(true);
@@ -56,6 +76,27 @@ public class GameLoop {
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		
+		SimpleEntity character = new SimpleEntity(new Vector3f(0, 0, 0));
+		
+		VertexArrayObject sunVao = new VertexArrayObject();
+		BufferObject sunVbo = new BufferObject(Target.ARRAY_BUFFER, UsageHint.STATIC_DRAW, new float[] {
+				0, 0, 0,
+				1, 0, 0,
+				0, 1, 0,
+				1, 1, 0,
+		});
+		TextureObject sunTexture = new TextureObject(TextureObject.Target.TEXTURE_2D, new float[] {
+				1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,
+				1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,
+				1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,
+				1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,
+				1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,
+				1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,
+				1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,
+				0.0f, 0.90f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,     1.0f, 0.99f, 0.90f,
+		}, 2, 2);
+		ShaderProgram sunShader = new ShaderProgram(Resources.get("glsl/sun.vert"), Resources.get("glsl/sun.frag"));
+		
 		previousNanoTime = System.nanoTime();
 		long handle = Window.getWindowHandle();
 		while (!glfwWindowShouldClose(handle)) {
@@ -66,10 +107,34 @@ public class GameLoop {
 			Window.updateFps(1 / dt);
 			
             glfwPollEvents();
-            glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+            updateCameraPosition();
+            
+            glClearColor(135.f / 256.f, 206.f / 256.f, 250.f / 256.f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
             
-            updateCameraPosition();
+            // draw the sun
+            try (VertexArrayObjectResource vaor = sunVao.use();
+       			 ShaderProgramResource spr = sunShader.use();
+       			 TextureObjectResource tor = sunTexture.use()) {
+            	spr.setUniform("projectionMatrix", Scene.getProjectionMatrix());
+            	spr.setUniform("modelMatrix", Scene.getCamera()
+            			.getRotationalViewMatrix()
+            			.rotate((float) Math.PI / 4.f, 1, 0, 0)
+            			.translate(new Vector3f(-0.5f, -0.5f, -10)));
+            	
+       			glEnableVertexAttribArray(0);
+       			try (BufferObjectResource bor = sunVbo.use()) {
+       				glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+       			}
+       			
+       			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);       			
+       			glDisableVertexAttribArray(0);
+       		}
+            
+            // everything else goes in front of the sun
+            glClear(GL_DEPTH_BUFFER_BIT);
+            
+            character.render();
             
             world.update();
             world.render();
@@ -92,7 +157,7 @@ public class GameLoop {
 		if (glfwGetKey(Window.getWindowHandle(), GLFW_KEY_ESCAPE) != 0) {
             glfwSetWindowShouldClose(Window.getWindowHandle(), true);
         }
-        float cameraSpeed = (float) (200.0 * dt);
+        float cameraSpeed = glfwGetKey(Window.getWindowHandle(), GLFW.GLFW_KEY_LEFT_ALT) != 0 ? ((float) (10.0 * dt)) : (float) (200.0 * dt);
         if (glfwGetKey(Window.getWindowHandle(), GLFW_KEY_W) != 0) {
             Vector3fc forward = camera.facing();
             Vector3f horizontalForward = forward.mul(cameraSpeed, new Vector3f());
