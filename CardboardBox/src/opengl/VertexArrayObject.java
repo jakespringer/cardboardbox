@@ -5,14 +5,14 @@ import static org.lwjgl.opengl.GL30.glDeleteVertexArrays;
 import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 
 public class VertexArrayObject {
-	private int vertexArrayObjectHandle;
+	private int handle;
 	
 	public VertexArrayObject() {
-		vertexArrayObjectHandle = glGenVertexArrays();
+		handle = glGenVertexArrays();
 	}
 	
 	public void bind() {
-		glBindVertexArray(vertexArrayObjectHandle);
+		glBindVertexArray(handle);
 	}
 	
 	public void unbind() {
@@ -20,7 +20,7 @@ public class VertexArrayObject {
 	}
 	
 	public void destroy() {
-		glDeleteVertexArrays(vertexArrayObjectHandle);
+		glDeleteVertexArrays(handle);
 	}
 	
 	public VertexArrayObjectResource use() {

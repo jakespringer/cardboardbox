@@ -19,7 +19,7 @@ public class SimplexNoiseChunkSupplier implements ChunkSupplier {
 					int rx = x * Chunk.SIDE_LENGTH + i;
 					int rz = z * Chunk.SIDE_LENGTH + k;
 	//				double height = Math.sin(rx / 20.0) * Math.cos(rz / 20.0) * 10;
-					double height = noise.fbm(rx / 1e3, rz / 1e3, 2, 2) * 20;
+					double height = noise.fbm(rx / 1e3, rz / 1e3, 6, 2) * 40;
 					for (int j = 0; j < Chunk.SIDE_LENGTH_PADDED_2 && rBaseY + j < height; ++j) {
 						int ry = y * Chunk.SIDE_LENGTH + j;
 						if (ry < height) {
@@ -27,7 +27,7 @@ public class SimplexNoiseChunkSupplier implements ChunkSupplier {
 							// + j*Chunk.SIDE_LENGTH_PADDED_2 + k] = (int)
 							// (Math.abs(Math.random()) * 0x00FFFFFF);
 							chunkColors[i * Chunk.SIDE_LENGTH_PADDED_2 * Chunk.SIDE_LENGTH_PADDED_2
-									+ j * Chunk.SIDE_LENGTH_PADDED_2 + k] = 0x00FFFFFF;
+									+ j * Chunk.SIDE_LENGTH_PADDED_2 + k] = 0x0000FF00;
 						} else {
 							chunkColors[i * Chunk.SIDE_LENGTH_PADDED_2 * Chunk.SIDE_LENGTH_PADDED_2
 									+ j * Chunk.SIDE_LENGTH_PADDED_2 + k] = 0;

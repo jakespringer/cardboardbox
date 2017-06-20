@@ -34,7 +34,6 @@ import org.lwjgl.glfw.GLFW;
 
 import chunk.SimplexNoiseChunkSupplier;
 import chunk.World;
-import entity.SimpleEntity;
 import opengl.BufferObject;
 import opengl.BufferObject.BufferObjectResource;
 import opengl.BufferObject.Target;
@@ -76,7 +75,7 @@ public class GameLoop {
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		
-		SimpleEntity character = new SimpleEntity(new Vector3f(0, 0, 0));
+//		SimpleEntity character = new SimpleEntity(new Vector3f(0, 0, 0));
 		
 		VertexArrayObject sunVao = new VertexArrayObject();
 		BufferObject sunVbo = new BufferObject(Target.ARRAY_BUFFER, UsageHint.STATIC_DRAW, new float[] {
@@ -134,7 +133,7 @@ public class GameLoop {
             // everything else goes in front of the sun
             glClear(GL_DEPTH_BUFFER_BIT);
             
-            character.render();
+//            character.render();
             
             world.update();
             world.render();

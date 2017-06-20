@@ -267,11 +267,6 @@ public class ChunkRenderer {
 					glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, i*12*4);
 				}
 				
-				glEnableVertexAttribArray(3);
-				try (BufferObjectResource bor = xyxzyzQuadNormalsBufferObject.use()) {
-					glVertexAttribPointer(3, 3, GL_FLOAT, false, 0, i*12*4);
-				}
-				
 				glEnableVertexAttribArray(1);
 				try (BufferObjectResource bor = vbo.use()) {
 					glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0);
@@ -281,10 +276,16 @@ public class ChunkRenderer {
 				try (BufferObjectResource bor = cbo.use()) {
 					glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, true, 0, 0);
 				}
+				
+				glEnableVertexAttribArray(3);
+				try (BufferObjectResource bor = xyxzyzQuadNormalsBufferObject.use()) {
+					glVertexAttribPointer(3, 3, GL_FLOAT, false, 0, i*12*4);
+				}
 								
 				glVertexAttribDivisor(0, 0);
 				glVertexAttribDivisor(1, 1);
 				glVertexAttribDivisor(2, 1);
+				glVertexAttribDivisor(3, 0);
 				
 				glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, quadCount);
 								

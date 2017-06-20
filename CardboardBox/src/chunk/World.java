@@ -7,17 +7,17 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
+import org.javatuples.Pair;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
 import game.Scene;
-import util.Tuple;
 
 public class World {
 	private static final int TAXICAB_MAX_DISTANCE = 10;
 
 	private Map<Vector3i, ChunkRenderer> chunks = new HashMap<>();
-	private Deque<Tuple<Vector3i, Chunk>> unprocessedChunks = new ConcurrentLinkedDeque<>();
+	private Deque<Pair<Vector3i, Chunk>> unprocessedChunks = new ConcurrentLinkedDeque<>();
 	private ChunkSupplier chunkSupplier;
 	
 	public World(ChunkSupplier chunkSupplier) {
@@ -28,7 +28,7 @@ public class World {
 		chunks.forEach((v, r) -> {
 			if (r == null) return;
 			
-			Vector3f translation = new Vector3f(v.x, v.y, v.z).mul(Chunk.SIDE_LENGTH).add(-32, -32, -32);
+			Vector3f translation = new Vector3f(v.x, v.y, v.z).add(-0.5f, -0.5f, -0.5f).mul(Chunk.SIDE_LENGTH);
 			r.render(translation);
 		});
 	}
@@ -56,17 +56,17 @@ public class World {
 			});
 		}
 
-		Tuple<Vector3i, Chunk> unprocessedChunk;
+		Pair<Vector3i, Chunk> unprocessedChunk;
 		while ((unprocessedChunk = unprocessedChunks.poll()) != null) {
-			ChunkRenderer r = new ChunkRenderer(unprocessedChunk.right);
-			if (chunks.containsKey(unprocessedChunk.left)) {
+			ChunkRenderer r = new ChunkRenderer(unprocessedChunk.getValue1());
+			if (chunks.containsKey(unprocessedChunk.getValue0())) {
 				// TODO: should never happen, but it does (thread safety bug)
 				System.err.println("Warning: Contains key already!");
 				
 				// avoid memory leaks
-				chunks.get(unprocessedChunk.left).destroy();
+				chunks.get(unprocessedChunk.getValue0()).destroy();
 			}
-			chunks.put(unprocessedChunk.left, r);
+			chunks.put(unprocessedChunk.getValue0(), r);
 		}
 	}
 	
@@ -77,17 +77,22 @@ public class World {
 		int cz = (int) (-position.z / Chunk.SIDE_LENGTH);
 
 		for (int i = -TAXICAB_MAX_DISTANCE; i <= TAXICAB_MAX_DISTANCE; ++i) {
-			for (int j = -TAXICAB_MAX_DISTANCE; j <= TAXICAB_MAX_DISTANCE; ++j) {
+			for (int j = -2; j <= 2; ++j) {
 				for (int k = -TAXICAB_MAX_DISTANCE; k <= TAXICAB_MAX_DISTANCE; ++k) {
 					int taxicabDistance = Math.abs(i) + Math.abs(j) + Math.abs(k);
 					if (taxicabDistance <= TAXICAB_MAX_DISTANCE) {
 						Vector3i vec = new Vector3i(i + cx, j + cy, k + cz);
-						if (!chunks.containsKey(vec) && !unprocessedChunks.stream().anyMatch(t -> t.left.equals(vec))) {
-							unprocessedChunks.add(new Tuple<>(vec, chunkSupplier.get(vec)));
+						if (!chunks.containsKey(vec) && !unprocessedChunks.stream().anyMatch(t -> t.getValue0().equals(vec))) {
+							unprocessedChunks.add(new Pair<>(vec, chunkSupplier.get(vec)));
 						}
 					}
 				}
 			}
+		}
+		
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e) {
 		}
 	}
 }
